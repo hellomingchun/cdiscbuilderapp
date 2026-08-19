@@ -27,7 +27,8 @@ async def list_datasets():
 async def get_dataset_records(
     domain: str,
     page: int = Query(1, ge=1),
-    page_size: int = Query(50, ge=1, le=1000),
+    page_size: Optional[int] = Query(None, ge=1, le=1000),
+    limit: Optional[int] = Query(None, ge=1, le=1000),
     search: Optional[str] = None
 ):
     """Retrieve paginated records from a built SDTM domain."""
@@ -36,6 +37,7 @@ async def get_dataset_records(
         raise HTTPException(status_code=404, detail=f"Domain '{d_upper}' has not been built yet. Run the pipeline in Step 3.")
 
     df = STATE["built_domains"][d_upper]
+    ps = limit or page_size or 50
 
     if search and not df.is_empty():
         s = search.lower()
@@ -50,18 +52,23 @@ async def get_dataset_records(
             df = df.filter(comb)
 
     total = df.height
-    offset = (page - 1) * page_size
-    sliced = df.slice(offset, page_size)
+    offset = (page - 1) * ps
+    sliced = df.slice(offset, ps)
+    records = sliced.to_dicts()
+    data_rows = [[row.get(col) for col in df.columns] for row in records]
 
     return {
         "domain": d_upper,
         "total": total,
         "page": page,
-        "page_size": page_size,
+        "page_size": ps,
+        "shape": [total, len(df.columns)],
         "columns": df.columns,
         "dtypes": {col: str(dtype) for col, dtype in zip(df.columns, df.dtypes)},
-        "records": sliced.to_dicts()
+        "records": records,
+        "data": data_rows
     }
+
 
 
 @router.get("/api/download/{domain}/{format}")
