@@ -18,9 +18,11 @@
                 }
             }
         }
-    </script>
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
     <style>
         [x-cloak]{display:none!important}
         .code-editor{font-family:'JetBrains Mono','Fira Code',Consolas,Monaco,monospace;tab-size:2}
@@ -257,6 +259,12 @@
         <div class="bg-white dark:bg-slate-900 rounded-lg p-3 border border-forge-100 dark:border-forge-900"><p class="text-xs text-slate-500 dark:text-slate-400">Achieved Power</p><p class="text-xl font-bold text-emerald-600 dark:text-emerald-400" x-text="sampleSizeResult&&sampleSizeResult.achieved_power?(sampleSizeResult.achieved_power*100).toFixed(1)+'%':'--'"></p></div>
       </div>
       <template x-if="sampleSizeResult&&sampleSizeResult.events_required"><p class="mt-3 text-xs text-slate-600 dark:text-slate-400 border-t border-forge-100 dark:border-forge-900 pt-3">Events Required: <span class="font-bold text-forge-700 dark:text-forge-300" x-text="sampleSizeResult.events_required"></span></p></template>
+      <template x-if="sampleSizeResult&&sampleSizeResult.formula_latex">
+        <div class="mt-3 p-3 bg-white dark:bg-slate-900 rounded-lg border border-forge-100 dark:border-forge-900 flex flex-col items-center">
+          <p class="text-[11px] font-mono text-slate-400 self-start mb-1">Mathematical Formula (LaTeX):</p>
+          <div class="text-sm text-forge-800 dark:text-forge-200 py-1" x-html="renderMathInline(sampleSizeResult.formula_latex)"></div>
+        </div>
+      </template>
       <template x-if="sampleSizeResult&&sampleSizeResult.note"><p class="mt-2 text-xs text-slate-400 italic" x-text="sampleSizeResult.note"></p></template>
     </div>
     <div x-show="tdmResult" class="bg-clinical-50 dark:bg-clinical-950/20 border border-clinical-200 dark:border-clinical-800 rounded-xl p-4">
@@ -759,12 +767,44 @@ function clinForgeApp() {
       else if(type === 'sap') await this.generateSAP();
     },
 
+    renderMathInline(latex) {
+      if (!latex) return '';
+      if (typeof katex !== 'undefined' && katex.renderToString) {
+        try {
+          return katex.renderToString(latex, { displayMode: true, throwOnError: false });
+        } catch(e) {
+          return '<span class="font-mono text-xs">' + latex + '</span>';
+        }
+      }
+      return '<span class="font-mono text-xs">' + latex + '</span>';
+    },
+
     renderDocMarkdown(md) {
       if (!md) return '';
+      let html = '';
       if (typeof marked !== 'undefined' && marked.parse) {
-        return marked.parse(md);
+        html = marked.parse(md);
+      } else {
+        html = '<pre class="whitespace-pre-wrap font-mono text-xs">' + md.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</pre>';
       }
-      return '<pre class="whitespace-pre-wrap font-mono text-xs">' + md.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</pre>';
+
+      // Auto-render KaTeX math delimiters ($...$ and $$...$$) in modal
+      setTimeout(() => {
+        const el = document.querySelector('.doc-markdown-content');
+        if (el && typeof renderMathInElement !== 'undefined') {
+          try {
+            renderMathInElement(el, {
+              delimiters: [
+                {left: '$$', right: '$$', display: true},
+                {left: '$', right: '$', display: false}
+              ],
+              throwOnError: false
+            });
+          } catch(e) {}
+        }
+      }, 50);
+
+      return html;
     },
 
     copyDocContent() {

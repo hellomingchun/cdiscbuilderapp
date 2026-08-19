@@ -86,15 +86,18 @@ def calculate_sample_size(req: SampleSizeRequest) -> Dict[str, Any]:
             margin = req.delta_margin or (0.1 * sd)
             effective_diff = max(diff + margin, 0.001)
             n1_raw = ((r + 1.0) * (z_alpha + z_beta)**2 * (sd**2)) / (r * (effective_diff**2))
-            details["Formula"] = "Continuous Non-Inferiority: N1 = (r+1)(Z_alpha + Z_beta)^2 * SD^2 / (r * (Diff + Margin)^2)"
+            details["Formula"] = "Continuous Non-Inferiority Test (1-sided alpha)"
+            details["Formula_LaTeX"] = r"N_1 = \frac{(r + 1)(Z_{\alpha} + Z_{\beta})^2 \cdot \sigma^2}{r \cdot (\Delta + \delta)^2}"
         elif req.hypothesis == "equivalence":
             margin = max(req.delta_margin or (0.1 * sd), 0.001)
             n1_raw = (2.0 * (z_alpha + z_beta)**2 * (sd**2)) / (margin**2)
-            details["Formula"] = "Continuous TOST Equivalence: N1 = 2(Z_alpha + Z_beta)^2 * SD^2 / Margin^2"
+            details["Formula"] = "Continuous TOST Two One-Sided Equivalence"
+            details["Formula_LaTeX"] = r"N_1 = \frac{2(Z_{\alpha} + Z_{\beta})^2 \cdot \sigma^2}{\delta^2}"
         else:  # Superiority
             eff_diff = max(diff, 0.001)
             n1_raw = ((r + 1.0) * (z_alpha + z_beta)**2 * (sd**2)) / (r * (eff_diff**2))
-            details["Formula"] = "Continuous Superiority: N1 = (r+1)(Z_alpha/2 + Z_beta)^2 * SD^2 / (r * Delta^2)"
+            details["Formula"] = "Continuous Superiority (2-Sample t-Test / ANCOVA)"
+            details["Formula_LaTeX"] = r"N_1 = \frac{(r + 1)(Z_{\alpha/2} + Z_{\beta})^2 \cdot \sigma^2}{r \cdot \Delta^2}"
 
         n1 = math.ceil(n1_raw)
         n2 = math.ceil(n1 * r)
@@ -111,12 +114,14 @@ def calculate_sample_size(req: SampleSizeRequest) -> Dict[str, Any]:
             diff = max(diff, 0.001)
             n1_raw = ((z_alpha * math.sqrt((r + 1.0) * p_bar * (1.0 - p_bar)) + 
                        z_beta * math.sqrt(r * p1 * (1.0 - p1) + p2 * (1.0 - p2)))**2) / (r * (diff**2))
-            details["Formula"] = "Farrington-Manning / Normal Binary Non-Inferiority"
+            details["Formula"] = "Farrington-Manning Score Test for Binary Non-Inferiority"
+            details["Formula_LaTeX"] = r"N_1 = \frac{\left(Z_{\alpha}\sqrt{(r+1)\bar{p}(1-\bar{p})} + Z_{\beta}\sqrt{r p_1(1-p_1) + p_2(1-p_2)}\right)^2}{r \cdot (p_2 - p_1 + \delta)^2}"
         else:  # Superiority
             diff = max(abs(p2 - p1), 0.001)
             n1_raw = ((z_alpha * math.sqrt((r + 1.0) * p_bar * (1.0 - p_bar)) + 
                        z_beta * math.sqrt(r * p1 * (1.0 - p1) + p2 * (1.0 - p2)))**2) / (r * (diff**2))
             details["Formula"] = "Fleiss / Normal Approximation for Two Independent Proportions"
+            details["Formula_LaTeX"] = r"N_1 = \frac{\left(Z_{\alpha/2}\sqrt{(r+1)\bar{p}(1-\bar{p})} + Z_{\beta}\sqrt{r p_1(1-p_1) + p_2(1-p_2)}\right)^2}{r \cdot (p_2 - p_1)^2}"
 
         n1 = math.ceil(n1_raw)
         n2 = math.ceil(n1 * r)
@@ -135,7 +140,8 @@ def calculate_sample_size(req: SampleSizeRequest) -> Dict[str, Any]:
         n1 = math.ceil(total_n_raw / (1.0 + r))
         n2 = math.ceil(n1 * r)
         total_n = n1 + n2
-        details["Formula"] = "Schoenfeld Formula: Events D = (r+1)^2(Z_alpha/2 + Z_beta)^2 / (r * (ln HR)^2)"
+        details["Formula"] = "Schoenfeld Survival Event Formula"
+        details["Formula_LaTeX"] = r"E = \frac{(r + 1)^2 (Z_{\alpha/2} + Z_{\beta})^2}{r \cdot (\ln \text{HR})^2}, \quad N = \frac{E}{P(\text{Event})}"
         details["EventsRequired"] = events_required
 
     elif req.endpoint_type == "diagnostic":
@@ -148,7 +154,8 @@ def calculate_sample_size(req: SampleSizeRequest) -> Dict[str, Any]:
         total_n = math.ceil(total_n_raw)
         n1 = math.ceil(n_diseased)
         n2 = total_n - n1
-        details["Formula"] = "Buderer Diagnostic Accuracy Sample Size for Sensitivity/Specificity"
+        details["Formula"] = "Buderer Diagnostic Accuracy Formula for Sensitivity"
+        details["Formula_LaTeX"] = r"N = \frac{Z_{\alpha/2}^2 \cdot S_N (1 - S_N)}{W^2 \cdot \text{Prevalence}}"
 
     elif req.endpoint_type == "simon":
         p0 = req.prop_control or 0.20
@@ -160,9 +167,13 @@ def calculate_sample_size(req: SampleSizeRequest) -> Dict[str, Any]:
         details["Stage1_N"] = n1
         details["Stage2_N"] = n2
         details["Stage1_Futility"] = f"Stop if <= {math.floor(n1 * p0)} responses in stage 1"
+        details["Formula"] = "Simon's 2-Stage Optimal Minimax Phase II Design"
+        details["Formula_LaTeX"] = r"H_0: p \le p_0 \quad \text{vs.} \quad H_1: p \ge p_1"
 
     else:
         n1, n2, total_n = 50, 50, 100
+        details["Formula"] = "Standard Biostatistical Sample Size Model"
+        details["Formula_LaTeX"] = r"N = N_1 + N_2"
 
     drop = max(min(req.dropout_rate or 0.0, 0.50), 0.0)
     total_enrolled = math.ceil(total_n / (1.0 - drop)) if drop > 0 else total_n
@@ -188,6 +199,7 @@ def calculate_sample_size(req: SampleSizeRequest) -> Dict[str, Any]:
         "n_treatment_enrolled": n2_enrolled,
         "events_required": events_required,
         "method": details.get("Formula", f"{req.hypothesis.title()} {req.endpoint_type.title()} Test"),
+        "formula_latex": details.get("Formula_LaTeX", ""),
         "details": details
     }
 

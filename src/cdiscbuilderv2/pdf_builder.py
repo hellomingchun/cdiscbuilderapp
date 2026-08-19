@@ -196,6 +196,14 @@ class ClinicalPDFBuilder:
             spaceBefore=4,
             spaceAfter=4
         ))
+        self.styles.add(ParagraphStyle(
+            name="DocMath",
+            fontName="Helvetica",
+            fontSize=8.5,
+            leading=12,
+            textColor=colors.HexColor("#0369a1"),
+            alignment=TA_LEFT
+        ))
 
     def build_pdf_from_markdown(
         self,
@@ -301,6 +309,36 @@ class ClinicalPDFBuilder:
                     story.append(Spacer(1, 4))
                     story.append(t_flowable)
                     story.append(Spacer(1, 6))
+                continue
+
+            # Math display block handling ($$ ... $$)
+            if line.strip().startswith("$$"):
+                math_lines = []
+                if line.strip() == "$$":
+                    i += 1
+                    while i < len(lines) and lines[i].strip() != "$$":
+                        math_lines.append(lines[i].strip())
+                        i += 1
+                else:
+                    math_content = line.strip().strip("$").strip()
+                    if math_content:
+                        math_lines.append(math_content)
+
+                raw_latex = " ".join(math_lines)
+                clean_math = self._format_latex_for_pdf(raw_latex)
+                t_math = Table([[Paragraph(f"<b>Statistical Formula:</b>&nbsp;&nbsp;{clean_math}", self.styles["DocMath"])]], colWidths=[504])
+                t_math.setStyle(TableStyle([
+                    ('BACKGROUND', (0,0), (-1,-1), colors.HexColor("#f0f9ff")),
+                    ('BOX', (0,0), (-1,-1), 1, colors.HexColor("#0284c7")),
+                    ('TOPPADDING', (0,0), (-1,-1), 6),
+                    ('BOTTOMPADDING', (0,0), (-1,-1), 6),
+                    ('LEFTPADDING', (0,0), (-1,-1), 10),
+                    ('RIGHTPADDING', (0,0), (-1,-1), 10),
+                ]))
+                story.append(Spacer(1, 4))
+                story.append(t_math)
+                story.append(Spacer(1, 6))
+                i += 1
                 continue
 
             # Headers
@@ -420,3 +458,52 @@ class ClinicalPDFBuilder:
         text = text.replace("$\\le$", "&le;")
         text = text.replace("$", "")
         return text
+
+    @staticmethod
+    def _format_latex_for_pdf(text: str) -> str:
+        """Converts LaTeX mathematical markup into clean ReportLab HTML/Unicode."""
+        while r"\frac{" in text:
+            idx = text.find(r"\frac{")
+            depth = 0
+            num_end = -1
+            for i in range(idx + 6, len(text)):
+                if text[i] == '{': depth += 1
+                elif text[i] == '}':
+                    if depth == 0:
+                        num_end = i
+                        break
+                    depth -= 1
+            if num_end == -1 or num_end + 1 >= len(text) or text[num_end + 1] != '{':
+                break
+            depth = 0
+            den_end = -1
+            for i in range(num_end + 2, len(text)):
+                if text[i] == '{': depth += 1
+                elif text[i] == '}':
+                    if depth == 0:
+                        den_end = i
+                        break
+                    depth -= 1
+            if den_end == -1: break
+            num = text[idx+6:num_end]
+            den = text[num_end+2:den_end]
+            text = text[:idx] + f"({num}) / ({den})" + text[den_end+1:]
+
+        text = re.sub(r"\\sqrt\{([^}]+)\}", r"√(\1)", text)
+        text = re.sub(r"\\text\{([^}]+)\}", r"\1", text)
+        text = text.replace(r"\cdot", " · ")
+        text = text.replace(r"\alpha", "α")
+        text = text.replace(r"\beta", "β")
+        text = text.replace(r"\sigma", "σ")
+        text = text.replace(r"\Delta", "Δ")
+        text = text.replace(r"\delta", "δ")
+        text = text.replace(r"\bar{p}", "p̄")
+        text = text.replace(r"\ln", "ln")
+        text = text.replace(r"\left(", "(").replace(r"\right)", ")")
+        text = text.replace(r"\left[", "[").replace(r"\right]", "]")
+        text = text.replace(r"\quad", "&nbsp;&nbsp;&nbsp;&nbsp;")
+        text = text.replace(r"\le", "≤").replace(r"\ge", "≥")
+        text = re.sub(r"_\{?([a-zA-Z0-9αβ/]+)\}?", r"<sub>\1</sub>", text)
+        text = re.sub(r"\^\{?([a-zA-Z0-9]+)\}?", r"<sup>\1</sup>", text)
+        return text.strip()
+

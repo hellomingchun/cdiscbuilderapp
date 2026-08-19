@@ -164,6 +164,7 @@ class ProtocolSAPGenerator:
         dropout = ss.get("dropout_rate", "10.0%") if ss else "10.0%"
         method_formula = ss.get("method", "Standard Biostatistical Model") if ss else "Standard Biostatistical Model"
         events_req = ss.get("events_required") if ss else None
+        formula_latex = ss.get("formula_latex", "") if ss else ""
 
         ts_params = d.get("cdisc_ts_params", {})
         indication = ts_params.get("INDIC", ts_params.get("PIND", "Target Clinical Indication"))
@@ -200,54 +201,47 @@ class ProtocolSAPGenerator:
 
 ## 2. BACKGROUND & SCIENTIFIC RATIONALE
 
-### 2.1 Disease Background & Unmet Medical Need
-{indication} represents a major clinical challenge within {therapeutic_area}. Despite current therapeutic standards, a significant proportion of subjects experience disease progression, suboptimal symptom control, or dose-limiting toxicities. This creates a compelling imperative for novel therapeutic interventions with improved efficacy, durability, and safety profiles.
+### 2.1 Disease Background & Unmet Need
+{indication} represents a significant clinical burden requiring rigorous confirmatory clinical evaluation. Current therapeutic standards leave substantial residual unmet medical needs regarding durability, safety profile, and therapeutic efficacy.
 
-### 2.2 Investigational Product & Mechanism of Action
-The investigational therapy evaluates targeted biological/pharmacological modulation designed to achieve superior therapeutic response relative to historical benchmarks and standard-of-care comparators. Preclinical and early-phase translational data support a favorable therapeutic index and predictable exposure-response relationship.
-
-### 2.3 Rationale for Study Design & Control Group
-A {design_type.lower()} design incorporating {blinding.lower()} and {randomization.lower()} was selected to minimize selection, performance, and ascertainment biases in accordance with ICH E10 (Choice of Control Group in Clinical Trials). 
+### 2.2 Investigational Product Mechanism of Action
+The investigational product targets validated disease-modifying pathways designed to achieve statistically superior clinical endpoints compared to conventional standard of care.
 
 ---
 
-## 3. STUDY OBJECTIVES, ENDPOINTS & ESTIMANDS FRAMEWORK (ICH E9 R1)
+## 3. STUDY OBJECTIVES & ICH E9(R1) ESTIMANDS FRAMEWORK
 
-### 3.1 Primary Objective & Endpoint
-- **Primary Objective**: To demonstrate the clinical {hypothesis.lower()} of the investigational regimen compared to control in subjects with {indication}.
-- **Primary Endpoint**: {obj_prim}.
+### 3.1 Primary & Secondary Objectives
+- **Primary Objective**: {obj_prim}
+- **Key Secondary Objective**: Assess safety, tolerability, and durable secondary functional outcomes over {len(visits)*4} weeks.
 
-### 3.2 Secondary Objectives & Endpoints
-- **Objective 2**: Evaluate overall safety, tolerability, and treatment-emergent adverse events (TEAEs).
-- **Objective 3**: Characterize secondary clinical efficacy measures, time-to-event outcomes, and patient-reported quality of life (PROs).
-- **Objective 4**: Assess pharmacokinetics / pharmacodynamics and biomarker modulation.
-
-### 3.3 ICH E9(R1) Estimands Definition
+### 3.2 Primary Estimand Framework (ICH E9(R1))
 1. **Target Population**: Adult subjects meeting all eligibility criteria with confirmed diagnosis of {indication}.
-2. **Variable (Endpoint)**: Primary efficacy measurement assessed from baseline through final visit.
-3. **Intercurrent Events Strategy**:
-   - *Treatment Discontinuation due to AE*: Treatment-policy strategy (all observed data retained in ITT).
-   - *Use of Prohibited Rescue Medication*: Composite or hypothetical strategy as defined in the SAP.
-4. **Summary Measure**: Difference in mean change from baseline, Hazard Ratio (HR), or Odds Ratio (OR) between treatment arms with corresponding 95% Confidence Intervals.
+2. **Treatment Condition**: Investigational Product vs. Control/Comparator as specified in Section 4.
+3. **Variable (Endpoint)**: Change from Baseline in primary clinical endpoint to final protocol assessment.
+4. **Intercurrent Events Strategy**:
+   - Treatment discontinuation due to AE: *Treatment-Policy Strategy* (all post-discontinuation data collected).
+   - Use of rescue medication: *Hypothetical / Composite Strategy*.
+5. **Population-level Summary Measure**: Difference in Least Squares (LS) Means / Hazard Ratio / Odds Ratio between active treatment and control.
 
 ---
 
-## 4. STUDY DESIGN & SCHEMA
+## 4. STUDY DESIGN & ARMS ARCHITECTURE
 
 ```
-[Screening Epoch: Informed Consent & Eligibility]
-                         │
-                         ▼
-        [1:1 Randomization & Stratification]
-           /                             \\
-          ▼                               ▼
-[Arm A: Investigational Regimen]   [Arm B: Control / Comparator]
-          │                               │
-          ▼                               ▼
-  [Treatment Epoch: Protocol Visits & Assessments]
-          │                               │
-          ▼                               ▼
-      [End of Treatment & Safety Follow-up Epoch]
+        [Screening Epoch: Inclusion/Exclusion Assessment]
+                          │
+                          ▼
+         [1:1 Randomization & Stratification]
+            /                             \\
+           ▼                               ▼
+ [Arm A: Investigational Regimen]   [Arm B: Control / Comparator]
+           │                               │
+           ▼                               ▼
+   [Treatment Epoch: Protocol Visits & Assessments]
+           │                               │
+           ▼                               ▼
+       [End of Treatment & Safety Follow-up Epoch]
 ```
 
 ### 4.1 Study Arms
@@ -308,15 +302,18 @@ The primary analysis tests the {hypothesis.lower()} hypothesis regarding {obj_pr
 - **Null Hypothesis ($H_0$)**: There is no clinically meaningful difference between the investigational product and control ($H_0: \\theta = 0$ or $H_0: \\text{{HR}} \\ge 1.0$).
 - **Alternative Hypothesis ($H_1$)**: The investigational product demonstrates superior clinical efficacy over control ($H_1: \\theta > 0$ or $H_1: \\text{{HR}} < 1.0$).
 
-### 8.2 Sample Size Determination
+### 8.2 Sample Size Determination & Statistical Formula
 - **Target Statistical Power**: {power_pct}% ($1 - \\beta = {power:.2f}$)
-- **Significance Level (Alpha)**: 2-sided $\\alpha = {alpha}$
+- **Significance Level (Alpha)**: 2-sided $\\alpha = {alpha}$ (1-sided $\\alpha/2 = {alpha/2:.4f}$)
 - **Anticipated Dropout / Non-evaluable Rate**: {dropout}
 - **Required Evaluated Subjects**: $N_1 = {n_arm1}$ (Control), $N_2 = {n_arm2}$ (Treatment)
 - **Total Enrollment Target**: **$N = {n_total}$ subjects**
 """
         if events_req:
-            md += f"- **Target Primary Events**: {events_req} events required under Schoenfeld survival formula.\n"
+            md += f"- **Target Primary Events**: {events_req} events required under Schoenfeld survival model.\n"
+
+        if formula_latex:
+            md += f"\n$$\n{formula_latex}\n$$\n\n"
 
         md += f"""- **Methodology Reference**: {method_formula}
 
@@ -357,6 +354,7 @@ All clinical data will be collected using a validated, 21 CFR Part 11 and CDISC-
         power_pct = int(power * 100)
         dropout = ss.get("dropout_rate", "10.0%") if ss else "10.0%"
         method_formula = ss.get("method", "Standard Statistical Model") if ss else "Standard Statistical Model"
+        formula_latex = ss.get("formula_latex", "") if ss else ""
 
         ts_params = d.get("cdisc_ts_params", {})
         indication = ts_params.get("INDIC", ts_params.get("PIND", "Target Clinical Indication"))
@@ -452,7 +450,11 @@ To preserve the family-wise type I error rate (FWER) at $\\alpha = {alpha}$, a p
 - Total enrolled sample size: **$N = {n_total}$**
 - Target Power: **{power_pct}%** at $\\alpha = {alpha}$
 - Statistical derivation methodology: `{method_formula}`
+"""
+        if formula_latex:
+            md += f"\n$$\n{formula_latex}\n$$\n\n"
 
+        md += """
 ---
 
 ## 6. SECONDARY & EXPLORATORY ENDPOINTS
