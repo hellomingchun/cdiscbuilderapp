@@ -1085,7 +1085,6 @@ columns:
                         if (res.ok) {
                             await this.fetchStudyInfo();
                             this.$nextTick(() => lucide.createIcons());
-                            this.activeTab = 'specs';
                         } else {
                             alert(`Error uploading file: ${data.detail}`);
                         }
