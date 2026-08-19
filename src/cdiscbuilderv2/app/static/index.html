@@ -629,9 +629,21 @@ function clinForgeApp() {
     async runPipeline() {
       this.pipelineRunning=true; this.pipelineLogs=[{type:'info',message:'Starting Polars transformation engine...'}];
       try {
-        const r=await fetch('/api/pipeline/run',{method:'POST'}); const d=await r.json();
-        if(r.ok){for(const m of(d.logs||[]))this.pipelineLogs.push({type:'info',message:m});this.pipelineLogs.push({type:'success',message:'Completed transformation of '+(d.domains_built||0)+' SDTM domains.'});if(d.warnings)for(const w of d.warnings)this.pipelineLogs.push({type:'info',message:w});await this.loadStudyState();if(this.availableDomains.length>0&&!this.selectedDatasetDomain)await this.selectDatasetDomain(this.availableDomains[0]);}
-        else this.pipelineLogs.push({type:'error',message:d.detail||'Pipeline failed'});
+        const r=await fetch('/api/pipeline/run',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({formats:['csv','parquet','xpt']})});
+        const d=await r.json();
+        if(r.ok){
+          for(const m of(d.logs||[]))this.pipelineLogs.push({type:'info',message:typeof m==='string'?m:JSON.stringify(m)});
+          this.pipelineLogs.push({type:'success',message:'Completed transformation of '+(d.domains_built||0)+' SDTM domains.'});
+          if(d.warnings)for(const w of d.warnings)this.pipelineLogs.push({type:'info',message:typeof w==='string'?w:JSON.stringify(w)});
+          await this.loadStudyState();
+          if(this.availableDomains.length>0&&!this.selectedDatasetDomain)await this.selectDatasetDomain(this.availableDomains[0]);
+        } else {
+          let errStr = 'Pipeline failed';
+          if(typeof d.detail==='string') errStr=d.detail;
+          else if(Array.isArray(d.detail)) errStr=d.detail.map(e=>e.msg||JSON.stringify(e)).join(', ');
+          else if(d.detail&&typeof d.detail==='object') errStr=JSON.stringify(d.detail);
+          this.pipelineLogs.push({type:'error',message:errStr});
+        }
       }catch(e){this.pipelineLogs.push({type:'error',message:'Pipeline error: '+e.message});}finally{this.pipelineRunning=false;}
     },
 

@@ -24,7 +24,7 @@ class RunPipelineRequest(BaseModel):
 
 
 @router.post("/run")
-async def run_pipeline(req: RunPipelineRequest):
+async def run_pipeline(req: Optional[RunPipelineRequest] = None):
     """Executes the full SDTM build pipeline in-memory using Polars."""
     if not STATE["specs"]:
         raise HTTPException(status_code=400, detail="No domain specifications available. Generate or upload specs in Step 2 first.")
