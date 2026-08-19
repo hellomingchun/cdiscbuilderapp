@@ -13,6 +13,7 @@ from fastapi import APIRouter, File, HTTPException, Query, UploadFile
 from pydantic import BaseModel
 
 from ...odm_parser import ODMParser
+from ...ai_generator import AISDTMSchemaGenerator
 from ..state import STATE, reset_study_state
 
 logger = logging.getLogger("cdiscbuilderv2.app.ingest")
@@ -193,29 +194,35 @@ async def get_metadata_dictionary(
 
 
 def _get_forms_list():
-    """Build a list of form summaries with suggested domains for Schema Studio."""
-    if STATE["metadata_df"] is None:
+    """Build a list of form summaries with suggested domains using AISDTMSchemaGenerator."""
+    if STATE["metadata_df"] is None or STATE["df_long"] is None:
         return []
-    meta = STATE["metadata_df"]
-    forms = []
-    domain_map = {"DM": "DM", "VS": "VS", "AE": "AE", "CM": "CM", "LB": "LB", "MH": "MH", "EX": "EX", "DS": "DS", "PE": "PE", "SV": "SV"}
-    seen = set()
-    for row in meta.to_dicts():
-        foid = row.get("FormOID", "")
-        if foid and foid not in seen:
-            seen.add(foid)
-            # Guess domain from FormOID
-            suggested = "DM"
-            for key, dom in domain_map.items():
-                if key.lower() in foid.lower():
-                    suggested = dom
-                    break
+    
+    try:
+        ai_gen = AISDTMSchemaGenerator(
+            metadata_df=STATE["metadata_df"],
+            df_long=STATE["df_long"],
+            parser=STATE["odm_parser"]
+        )
+        discovered = ai_gen.discover_crf_forms()
+        
+        forms = []
+        for f in discovered:
             forms.append({
-                "FormOID": foid,
-                "Description": row.get("FormName", foid),
-                "SuggestedDomain": suggested,
+                "FormOID": f["FormOID"],
+                "FormName": f.get("FormName") or f["FormOID"],
+                "Description": f.get("FormName") or f["FormOID"],
+                "SuggestedDomain": f["SuggestedDomain"],
+                "SuggestedClass": f.get("SuggestedClass", "FINDINGS"),
+                "ItemCount": f.get("ItemCount", 0),
+                "TotalRecords": f.get("TotalRecords", 0),
+                "Confidence": f.get("Confidence", 80)
             })
-    return forms
+        return forms
+    except Exception as e:
+        logger.warning(f"Failed to run AI form discovery: {e}")
+        return []
+
 
 
 @router.get("/forms")
