@@ -391,19 +391,36 @@
 
                 <!-- Center/Right: YAML Editor & Validator -->
                 <div class="lg:col-span-3 bg-slate-950 border border-slate-800 rounded-xl p-4 flex flex-col h-[650px]">
-                    <div class="flex justify-between items-center pb-3 border-b border-slate-800 mb-3">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center pb-3 border-b border-slate-800 mb-3 gap-2">
                         <div class="flex items-center gap-3">
                             <div class="font-mono font-bold text-sm text-cyan-400 flex items-center gap-1.5">
                                 <i data-lucide="file-code" class="w-4 h-4 text-cyan-400"></i>
                                 <span x-text="selectedDomain ? selectedDomain + '.yaml' : 'No Domain Selected'"></span>
                             </div>
-                            <span class="text-[10px] text-slate-400 bg-slate-900 border border-slate-800 px-2 py-0.5 rounded font-mono">Yamaa Schema Specification v1.0</span>
+                            
+                            <!-- Prominent Validation Status Badge -->
+                            <template x-if="selectedDomain && schemaValidation.is_valid">
+                                <span class="inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/50 shadow-sm shadow-emerald-500/20">
+                                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                                    <span>✓ Valid Yamaa Schema</span>
+                                </span>
+                            </template>
+                            <template x-if="selectedDomain && !schemaValidation.is_valid">
+                                <span class="inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full font-bold bg-red-500/20 text-red-300 border border-red-500/50 shadow-sm shadow-red-500/20">
+                                    <span class="w-2 h-2 rounded-full bg-red-500 animate-ping"></span>
+                                    <span>⚠️ Schema Errors Detected</span>
+                                </span>
+                            </template>
                         </div>
 
                         <div class="flex items-center gap-2">
+                            <button @click="validateCurrentYaml()" class="bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-300 text-xs px-3 py-1.5 rounded-lg font-medium flex items-center gap-1 transition">
+                                <i data-lucide="shield-check" class="w-3.5 h-3.5 text-emerald-400"></i>
+                                <span>Validate Now</span>
+                            </button>
                             <button @click="aiRegenerateSingleDomain()" :disabled="!selectedDomain || aiGenerating" class="bg-indigo-600/30 hover:bg-indigo-600/40 border border-indigo-500/40 text-indigo-300 text-xs px-3 py-1.5 rounded-lg font-semibold flex items-center gap-1.5 transition">
                                 <i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-400"></i>
-                                <span>AI Re-Synthesize Domain</span>
+                                <span>AI Re-Synthesize</span>
                             </button>
                             <button @click="saveSpec()" :disabled="!selectedDomain || savingSpec" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-3.5 py-1.5 rounded-lg font-semibold flex items-center gap-1.5 shadow-lg shadow-emerald-600/20 disabled:opacity-40 transition">
                                 <i data-lucide="save" class="w-3.5 h-3.5"></i>
@@ -411,6 +428,21 @@
                             </button>
                         </div>
                     </div>
+
+                    <!-- Error Diagnostic Banner (Shows when validation errors exist) -->
+                    <template x-if="selectedDomain && !schemaValidation.is_valid && schemaValidation.errors.length > 0">
+                        <div class="mb-3 bg-red-950/60 border border-red-500/50 rounded-lg p-3 text-xs text-red-200 space-y-1">
+                            <div class="font-bold flex items-center gap-1.5 text-red-300">
+                                <i data-lucide="alert-octagon" class="w-4 h-4 text-red-400"></i>
+                                <span x-text="`${schemaValidation.errors.length} Schema Error(s) Found:`"></span>
+                            </div>
+                            <ul class="list-disc list-inside space-y-0.5 text-[11px] text-red-200 font-mono">
+                                <template x-for="(err, idx) in schemaValidation.errors" :key="idx">
+                                    <li x-text="err"></li>
+                                </template>
+                            </ul>
+                        </div>
+                    </template>
 
                     <!-- Code Editor Area -->
                     <div class="flex-1 relative">
@@ -421,21 +453,15 @@
                     <div class="pt-2.5 mt-2 border-t border-slate-800/80 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 text-[11px]">
                         <div class="flex items-center gap-2">
                             <template x-if="schemaValidation.is_valid">
-                                <span class="inline-flex items-center gap-1 text-emerald-400 bg-emerald-950/40 border border-emerald-500/30 px-2 py-0.5 rounded font-medium">
-                                    <i data-lucide="check-circle" class="w-3 h-3 text-emerald-400"></i>
-                                    <span>Valid Yamaa Specification (v1.0 Standard)</span>
-                                </span>
-                            </template>
-                            <template x-if="!schemaValidation.is_valid && schemaValidation.errors.length > 0">
-                                <span class="inline-flex items-center gap-1 text-red-400 bg-red-950/40 border border-red-500/30 px-2 py-0.5 rounded font-medium truncate max-w-md" :title="schemaValidation.errors.join('\n')">
-                                    <i data-lucide="alert-circle" class="w-3 h-3 text-red-400"></i>
-                                    <span x-text="`Invalid: ${schemaValidation.errors[0]}`"></span>
+                                <span class="inline-flex items-center gap-1.5 text-emerald-400 bg-emerald-950/40 border border-emerald-500/40 px-2.5 py-1 rounded font-medium">
+                                    <i data-lucide="check-circle-2" class="w-3.5 h-3.5 text-emerald-400"></i>
+                                    <span>Yamaa v1.0 Specification Validated &amp; Ready for Build</span>
                                 </span>
                             </template>
                             <template x-if="schemaValidation.warnings.length > 0">
                                 <span class="inline-flex items-center gap-1 text-amber-400 bg-amber-950/40 border border-amber-500/30 px-2 py-0.5 rounded font-medium" :title="schemaValidation.warnings.join('\n')">
                                     <i data-lucide="alert-triangle" class="w-3 h-3 text-amber-400"></i>
-                                    <span x-text="`${schemaValidation.warnings.length} Schema Warning(s)`"></span>
+                                    <span x-text="`${schemaValidation.warnings.length} CDISC Recommendation(s)`"></span>
                                 </span>
                             </template>
                         </div>
