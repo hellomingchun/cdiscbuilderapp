@@ -962,6 +962,13 @@ columns:
                         if (tab === 'specs') {
                             this.fetchCRFForms();
                             this.validateCurrentYaml();
+                        } else if (tab === 'viewer') {
+                            if (this.viewerDomain) {
+                                this.fetchDomainData();
+                            } else if (this.generatedDomains.length > 0) {
+                                this.viewerDomain = this.generatedDomains[0];
+                                this.fetchDomainData();
+                            }
                         }
                         this.$nextTick(() => lucide.createIcons());
                     });
@@ -1287,6 +1294,7 @@ columns:
                             this.generatedDomains = this.pipelineResults.map(r => r.domain);
                             if (this.generatedDomains.length > 0) {
                                 this.viewerDomain = this.generatedDomains[0];
+                                await this.fetchDomainData();
                             }
                             this.verificationReports = data.verifications || {};
                             
