@@ -518,14 +518,33 @@ async def update_spec(domain: str, req: SpecUpdateRequest):
 @app.post("/api/specs/validate")
 async def validate_yaml_spec(req: SpecUpdateRequest):
     """Validates a Yamaa YAML specification string in real-time."""
-    validator = YamaaSchemaValidator(req.yaml_content)
+    validator = YamaaSchemaValidator(req.yaml_content, req.domain)
     is_valid, errors, warnings = validator.validate()
     return {
         "status": "VALID" if is_valid else "INVALID",
         "is_valid": is_valid,
         "errors": errors,
         "warnings": warnings,
-        "domain": validator.spec.get("domain") if validator.spec else None
+        "domain": validator.domain if hasattr(validator, "domain") else req.domain
+    }
+
+
+@app.post("/api/specs/fix")
+async def auto_fix_spec(req: SpecUpdateRequest):
+    """Automatically repairs and standardizes a YAML specification to 100% valid Yamaa standard."""
+    from ..validator import auto_fix_yamaa_schema, YamaaSchemaValidator
+    fixed_yaml, fixes = auto_fix_yamaa_schema(req.yaml_content, req.domain)
+    
+    v = YamaaSchemaValidator(fixed_yaml, req.domain)
+    is_valid, errors, warnings = v.validate()
+    
+    return {
+        "status": "SUCCESS",
+        "fixed_yaml": fixed_yaml,
+        "fixes_applied": fixes,
+        "is_valid": is_valid,
+        "errors": errors,
+        "warnings": warnings
     }
 
 

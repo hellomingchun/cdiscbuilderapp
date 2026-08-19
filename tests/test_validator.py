@@ -74,3 +74,18 @@ rows:
     is_valid, errors, warnings = validator.validate()
     assert is_valid is False
     assert any("invalid SQL filter" in e for e in errors)
+
+def test_auto_fix_yamaa_schema():
+    from cdiscbuilderv2.validator import auto_fix_yamaa_schema
+    
+    broken_yaml = """
+columns:
+  - name: AGE
+    type: str
+"""
+    fixed_yaml, fixes = auto_fix_yamaa_schema(broken_yaml, "DM")
+    assert len(fixes) > 0
+    v = YamaaSchemaValidator(fixed_yaml, "DM")
+    is_valid, errors, _ = v.validate()
+    assert is_valid is True
+    assert len(errors) == 0
