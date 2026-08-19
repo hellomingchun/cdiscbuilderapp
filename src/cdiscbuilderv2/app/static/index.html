@@ -74,13 +74,25 @@
             <!-- Header Actions, Theme Switcher & AI Provider -->
             <div class="flex items-center space-x-2.5">
                 <!-- Theme Toggle Button -->
-                <button @click="toggleTheme()" class="p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition" :title="isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'">
-                    <template x-if="isDarkMode">
-                        <i data-lucide="sun" class="w-4 h-4 text-amber-400"></i>
-                    </template>
-                    <template x-if="!isDarkMode">
-                        <i data-lucide="moon" class="w-4 h-4 text-slate-600"></i>
-                    </template>
+                <button @click="toggleTheme()" class="p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition" :title="isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'">
+                    <span x-show="isDarkMode" class="flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4 text-amber-400">
+                            <circle cx="12" cy="12" r="4"/>
+                            <path d="M12 2v2"/>
+                            <path d="M12 20v2"/>
+                            <path d="m4.93 4.93 1.41 1.41"/>
+                            <path d="m17.66 17.66 1.41 1.41"/>
+                            <path d="M2 12h2"/>
+                            <path d="M20 12h2"/>
+                            <path d="m6.34 17.66-1.41 1.41"/>
+                            <path d="m19.07 4.93-1.41 1.41"/>
+                        </svg>
+                    </span>
+                    <span x-show="!isDarkMode" class="flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4 text-slate-700">
+                            <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>
+                        </svg>
+                    </span>
                 </button>
 
                 <!-- AI Provider Badge & Settings -->
@@ -909,7 +921,6 @@ columns:
                         document.documentElement.classList.remove('dark');
                         localStorage.setItem('cdisc_theme', 'light');
                     }
-                    this.$nextTick(() => lucide.createIcons());
                 },
 
                 getProviderLabel() {
