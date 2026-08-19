@@ -1274,7 +1274,7 @@ columns:
 
                 async runPipeline() {
                     this.pipelineRunning = true;
-                    this.pipelineLogs = ['Starting Polars transformation engine...', 'Reading EDC ClinicalData...'];
+                    this.pipelineLogs = ['Starting Polars transformation engine...', 'Reading EDC ClinicalData in-memory...'];
                     try {
                         const res = await fetch('/api/pipeline/run', {
                             method: 'POST',
@@ -1283,18 +1283,25 @@ columns:
                         });
                         const data = await res.json();
                         if (res.ok) {
-                            this.pipelineResults = data.results || [];
+                            this.pipelineResults = data.results || data.datasets || [];
                             this.generatedDomains = this.pipelineResults.map(r => r.domain);
-                            if (this.generatedDomains.length > 0 && !this.viewerDomain) {
+                            if (this.generatedDomains.length > 0) {
                                 this.viewerDomain = this.generatedDomains[0];
                             }
                             this.verificationReports = data.verifications || {};
-                            this.pipelineLogs.push('Completed transformation of ' + this.pipelineResults.length + ' SDTM domains.');
-                            this.pipelineLogs.push('All verifications evaluated.');
+                            
+                            for (const r of this.pipelineResults) {
+                                this.pipelineLogs.push(`✓ Domain ${r.domain}: Generated ${r.rows.toLocaleString()} records, ${r.columns_count} variables`);
+                            }
+                            this.pipelineLogs.push(`Finished: Successfully transformed ${this.pipelineResults.length} SDTM domain(s).`);
+                            this.pipelineLogs.push('Conformance & quality verifications evaluated.');
+                            this.$nextTick(() => lucide.createIcons());
                         } else {
+                            this.pipelineLogs.push(`❌ Error: ${data.detail}`);
                             alert(`Pipeline build failed: ${data.detail}`);
                         }
                     } catch (e) {
+                        this.pipelineLogs.push(`❌ Pipeline execution failed: ${e.message}`);
                         alert('Pipeline execution failed: ' + e.message);
                     } finally {
                         this.pipelineRunning = false;

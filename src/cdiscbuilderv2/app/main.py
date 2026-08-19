@@ -651,7 +651,9 @@ async def run_pipeline(req: RunPipelineRequest):
 
         return {
             "status": "SUCCESS",
+            "results": results,
             "datasets": results,
+            "verifications": verification_reports,
             "output_dir": str(out_dir)
         }
 
