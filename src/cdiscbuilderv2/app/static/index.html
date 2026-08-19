@@ -147,25 +147,26 @@
     <p class="text-sm text-slate-500 dark:text-slate-400 mt-0.5">Select an industry clinical trial archetype, configure protocol parameters, and synthesize CDISC trial design domains.</p>
   </div>
   <div class="flex flex-wrap gap-2">
-    <template x-for="cat in ['All','Oncology','Medical Devices','Clinical Pharmacology','Cardiovascular','Rare Diseases','Psychiatry / CNS']" :key="cat">
+    <template x-for="cat in ['All','Pharma & Oncology','Medical Devices & Diagnostics','Cardiovascular & Chronic','Vaccines & Bioequivalence','Rare & Pragmatic']" :key="cat">
       <button @click="selectedDesignCategory=cat" :class="selectedDesignCategory===cat?'bg-forge-600 text-white border-forge-600':'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-forge-400'" class="px-3.5 py-1.5 rounded-full text-xs font-semibold border transition" x-text="cat"></button>
     </template>
   </div>
   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
     <template x-for="design in filteredCatalog()" :key="design.id">
-      <div @click="selectDesign(design)" :class="selectedDesign&&selectedDesign.id===design.id?'ring-2 ring-forge-500 border-forge-400 dark:border-forge-500 bg-forge-50 dark:bg-forge-950/30':'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-forge-400 dark:hover:border-forge-600'" class="design-card rounded-xl border p-4 cursor-pointer transition-all">
-        <div class="flex items-start justify-between mb-3">
-          <span class="text-[10px] px-2 py-0.5 rounded-full font-semibold bg-clinical-100 dark:bg-clinical-900/40 text-clinical-700 dark:text-clinical-300 border border-clinical-200 dark:border-clinical-800" x-text="design.category"></span>
-          <span x-show="selectedDesign&&selectedDesign.id===design.id" class="w-5 h-5 rounded-full bg-forge-500 flex items-center justify-center flex-shrink-0">
-            <svg class="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
-          </span>
+      <div @click="selectDesign(design)" :class="selectedDesign&&selectedDesign.id===design.id?'ring-2 ring-forge-500 border-forge-400 dark:border-forge-500 bg-forge-50 dark:bg-forge-950/30':'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-forge-400 dark:hover:border-forge-600'" class="design-card rounded-xl border p-4 cursor-pointer transition-all flex flex-col justify-between">
+        <div>
+          <div class="flex items-start justify-between mb-2">
+            <span class="text-[10px] px-2 py-0.5 rounded-full font-semibold bg-clinical-100 dark:bg-clinical-900/40 text-clinical-700 dark:text-clinical-300 border border-clinical-200 dark:border-clinical-800" x-text="design.category"></span>
+            <span x-show="selectedDesign&&selectedDesign.id===design.id" class="w-5 h-5 rounded-full bg-forge-500 flex items-center justify-center flex-shrink-0">
+              <svg class="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+            </span>
+          </div>
+          <h3 class="text-xs font-bold text-slate-900 dark:text-white leading-snug mb-1" x-text="design.title || design.name"></h3>
+          <p class="text-[11px] text-slate-500 dark:text-slate-400 mb-3 line-clamp-3 leading-relaxed" x-text="design.description"></p>
         </div>
-        <h3 class="text-sm font-bold text-slate-900 dark:text-white leading-tight mb-1" x-text="design.name"></h3>
-        <p class="text-xs text-slate-500 dark:text-slate-400 mb-3 leading-relaxed" x-text="design.description"></p>
-        <div class="flex flex-wrap gap-1">
-          <span class="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 font-mono" x-text="design.phase"></span>
-          <span class="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300" x-text="design.blinding"></span>
-          <span class="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300" x-text="design.hypothesis_type"></span>
+        <div class="flex flex-wrap gap-1 mt-auto pt-2 border-t border-slate-100 dark:border-slate-700/50">
+          <span class="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 font-mono font-medium" x-text="design.phase"></span>
+          <span class="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300" x-text="design.badge || design.design_type"></span>
         </div>
       </div>
     </template>
@@ -176,46 +177,67 @@
   <!-- Config Panel -->
   <div x-show="selectedDesign" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-6 space-y-6">
     <div class="flex items-center justify-between">
-      <h3 class="font-bold text-slate-900 dark:text-white">Configure: <span class="text-forge-600 dark:text-forge-400" x-text="selectedDesign?selectedDesign.name:''"></span></h3>
+      <h3 class="font-bold text-slate-900 dark:text-white">Configure: <span class="text-forge-600 dark:text-forge-400" x-text="selectedDesign?(selectedDesign.title||selectedDesign.name):''"></span></h3>
       <button @click="selectedDesign=null;sampleSizeResult=null;tdmResult=null" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
       </button>
     </div>
     <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
       <div><label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">Protocol ID</label><input x-model="designConfig.protocol_id" type="text" placeholder="e.g. STUDY-001" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-forge-500"></div>
-      <div><label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">Hypothesis Type</label><select x-model="designConfig.hypothesis_type" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-forge-500"><option value="superiority">Superiority</option><option value="non_inferiority">Non-Inferiority</option><option value="equivalence">Equivalence</option></select></div>
-      <div><label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">Primary Endpoint Type</label><select x-model="designConfig.endpoint_type" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-forge-500"><option value="continuous">Continuous</option><option value="binary">Binary / Proportion</option><option value="survival">Time-to-Event</option><option value="diagnostic">Diagnostic Accuracy</option></select></div>
-      <div><label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">Alpha (1-sided)</label><select x-model="designConfig.alpha" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-forge-500"><option value="0.025">0.025 (2-sided 0.05)</option><option value="0.05">0.05 (1-sided)</option><option value="0.01">0.01 (stringent)</option></select></div>
-      <div><label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">Power</label><select x-model="designConfig.power" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-forge-500"><option value="0.80">80%</option><option value="0.85">85%</option><option value="0.90">90%</option></select></div>
+      <div><label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">Hypothesis Type</label><select x-model="designConfig.hypothesis_type" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-forge-500"><option value="superiority">Superiority</option><option value="non_inferiority">Non-Inferiority</option><option value="equivalence">Equivalence</option><option value="single_arm">Single-Arm / Benchmark</option></select></div>
+      <div><label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">Primary Endpoint Type</label><select x-model="designConfig.endpoint_type" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-forge-500"><option value="continuous">Continuous (ANCOVA/MMRM)</option><option value="binary">Binary / Proportion (FM)</option><option value="survival">Time-to-Event (Schoenfeld)</option><option value="diagnostic">Diagnostic Accuracy (Buderer)</option><option value="simon">Simon's 2-Stage Phase II</option><option value="cluster">Cluster Randomized (CRT/ICC)</option><option value="vaccine">Vaccine Efficacy (Poisson)</option><option value="dose_escalation">Dose Escalation (3+3)</option><option value="factorial">Factorial 2x2</option></select></div>
+      <div><label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">Alpha (Significance Level)</label><select x-model="designConfig.alpha" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-forge-500"><option value="0.05">0.05 (Standard)</option><option value="0.025">0.025 (1-sided / Conservative)</option><option value="0.01">0.01 (Stringent)</option></select></div>
+      <div><label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">Statistical Power</label><select x-model="designConfig.power" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-forge-500"><option value="0.80">80%</option><option value="0.85">85%</option><option value="0.90">90%</option><option value="0.95">95%</option></select></div>
       <div><label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">Allocation Ratio</label><select x-model="designConfig.allocation_ratio" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-forge-500"><option value="1">1:1</option><option value="2">2:1</option><option value="3">3:1</option></select></div>
-      <div><label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">Dropout Rate</label><select x-model="designConfig.dropout_rate" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-forge-500"><option value="0.0">0%</option><option value="0.10">10%</option><option value="0.15">15%</option><option value="0.20">20%</option></select></div>
+      <div><label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">Anticipated Dropout Rate</label><select x-model="designConfig.dropout_rate" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-forge-500"><option value="0.0">0% (None)</option><option value="0.05">5%</option><option value="0.10">10%</option><option value="0.15">15%</option><option value="0.20">20%</option></select></div>
     </div>
     <div class="border-t border-slate-100 dark:border-slate-800 pt-4">
       <p class="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-3">Endpoint Parameters</p>
       <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
         <template x-if="designConfig.endpoint_type==='continuous'">
           <div class="contents">
-            <div><label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">Mean Difference (Delta)</label><input x-model.number="designConfig.delta" type="number" step="0.1" placeholder="e.g. 5" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-forge-500"></div>
-            <div><label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">SD (Pooled)</label><input x-model.number="designConfig.sd" type="number" step="0.1" placeholder="e.g. 10" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-forge-500"></div>
+            <div><label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">Mean Ctrl</label><input x-model.number="designConfig.mean_control" type="number" step="0.1" placeholder="e.g. 10" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-forge-500"></div>
+            <div><label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">Mean Trt</label><input x-model.number="designConfig.mean_treatment" type="number" step="0.1" placeholder="e.g. 14" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-forge-500"></div>
+            <div><label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">SD (Pooled)</label><input x-model.number="designConfig.sd_pooled" type="number" step="0.1" placeholder="e.g. 8" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-forge-500"></div>
+            <div><label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">Delta Margin</label><input x-model.number="designConfig.delta_margin" type="number" step="0.1" placeholder="e.g. 2" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-forge-500"></div>
           </div>
         </template>
         <template x-if="designConfig.endpoint_type==='binary'">
           <div class="contents">
-            <div><label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">Response Rate (Trt)</label><input x-model.number="designConfig.p_treatment" type="number" step="0.01" min="0" max="1" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-forge-500"></div>
-            <div><label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">Response Rate (Ctrl)</label><input x-model.number="designConfig.p_control" type="number" step="0.01" min="0" max="1" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-forge-500"></div>
-            <div><label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">NI Margin</label><input x-model.number="designConfig.ni_margin" type="number" step="0.01" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-forge-500"></div>
+            <div><label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">Response Rate (Trt)</label><input x-model.number="designConfig.prop_treatment" type="number" step="0.01" min="0" max="1" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-forge-500"></div>
+            <div><label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">Response Rate (Ctrl)</label><input x-model.number="designConfig.prop_control" type="number" step="0.01" min="0" max="1" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-forge-500"></div>
+            <div><label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">NI Delta Margin</label><input x-model.number="designConfig.delta_margin" type="number" step="0.01" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-forge-500"></div>
           </div>
         </template>
         <template x-if="designConfig.endpoint_type==='survival'">
           <div class="contents">
             <div><label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">Hazard Ratio (HR)</label><input x-model.number="designConfig.hazard_ratio" type="number" step="0.01" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-forge-500"></div>
-            <div><label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">Ctrl Median OS (mo)</label><input x-model.number="designConfig.median_control" type="number" step="1" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-forge-500"></div>
+            <div><label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">Ctrl Event Rate</label><input x-model.number="designConfig.event_rate_control" type="number" step="0.01" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-forge-500"></div>
           </div>
         </template>
         <template x-if="designConfig.endpoint_type==='diagnostic'">
           <div class="contents">
             <div><label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">Expected Sensitivity</label><input x-model.number="designConfig.sensitivity" type="number" step="0.01" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-forge-500"></div>
-            <div><label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">Acceptable Width</label><input x-model.number="designConfig.margin" type="number" step="0.01" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-forge-500"></div>
+            <div><label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">Prevalence</label><input x-model.number="designConfig.prevalence" type="number" step="0.01" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-forge-500"></div>
+            <div><label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">CI Half-Width (W)</label><input x-model.number="designConfig.ci_half_width" type="number" step="0.01" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-forge-500"></div>
+          </div>
+        </template>
+        <template x-if="designConfig.endpoint_type==='cluster'">
+          <div class="contents">
+            <div><label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">Cluster Size (m)</label><input x-model.number="designConfig.cluster_size" type="number" step="1" placeholder="e.g. 30" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-forge-500"></div>
+            <div><label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">Intraclass Corr (ICC)</label><input x-model.number="designConfig.icc" type="number" step="0.005" placeholder="e.g. 0.02" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-forge-500"></div>
+          </div>
+        </template>
+        <template x-if="designConfig.endpoint_type==='vaccine'">
+          <div class="contents">
+            <div><label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">Target VE (e.g. 0.75)</label><input x-model.number="designConfig.vaccine_efficacy" type="number" step="0.05" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-forge-500"></div>
+            <div><label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">Null VE Margin</label><input x-model.number="designConfig.null_ve" type="number" step="0.05" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-forge-500"></div>
+          </div>
+        </template>
+        <template x-if="designConfig.endpoint_type==='dose_escalation'">
+          <div class="contents">
+            <div><label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">Dose Levels</label><input x-model.number="designConfig.dose_levels" type="number" step="1" min="2" max="10" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-forge-500"></div>
+            <div><label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">Cohort Size</label><input x-model.number="designConfig.cohort_size" type="number" step="1" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-forge-500"></div>
           </div>
         </template>
       </div>
@@ -648,20 +670,54 @@ function clinForgeApp() {
     },
 
     selectDesign(design) {
-      this.selectedDesign=design; this.sampleSizeResult=null; this.tdmResult=null;
-      if(design.default_params) this.designConfig={...this.designConfig,...design.default_params};
-      if(design.hypothesis_type) this.designConfig.hypothesis_type=design.hypothesis_type.toLowerCase().replace(/ /g,'_');
-      if(design.primary_endpoint_type) this.designConfig.endpoint_type=design.primary_endpoint_type.toLowerCase();
+      this.selectedDesign = design;
+      this.sampleSizeResult = null;
+      this.tdmResult = null;
+      if (design.default_params) this.designConfig = { ...this.designConfig, ...design.default_params };
+      if (design.hypothesis_type) this.designConfig.hypothesis_type = design.hypothesis_type.toLowerCase().replace(/ /g, '_');
+      if (design.endpoint_type) this.designConfig.endpoint_type = design.endpoint_type.toLowerCase();
+      else if (design.primary_endpoint_type) this.designConfig.endpoint_type = design.primary_endpoint_type.toLowerCase();
     },
 
     async calculateSampleSize() {
       if(!this.selectedDesign) return;
-      this.calculatingSS=true; this.sampleSizeResult=null;
+      this.calculatingSS = true;
+      this.sampleSizeResult = null;
       try {
-        const p={design_id:this.selectedDesign.id,endpoint_type:this.designConfig.endpoint_type,hypothesis_type:this.designConfig.hypothesis_type,alpha:parseFloat(this.designConfig.alpha),power:parseFloat(this.designConfig.power),allocation_ratio:parseFloat(this.designConfig.allocation_ratio),dropout_rate:parseFloat(this.designConfig.dropout_rate),delta:this.designConfig.delta,sd:this.designConfig.sd,p_treatment:this.designConfig.p_treatment,p_control:this.designConfig.p_control,ni_margin:this.designConfig.ni_margin,hazard_ratio:this.designConfig.hazard_ratio,median_control:this.designConfig.median_control,sensitivity:this.designConfig.sensitivity,margin:this.designConfig.margin};
-        const r=await fetch('/api/designs/calculate_sample_size',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(p)});
-        if(r.ok) this.sampleSizeResult=await r.json();
-      } catch(e){} finally { this.calculatingSS=false; }
+        const p = {
+          design_id: this.selectedDesign.id,
+          endpoint_type: this.designConfig.endpoint_type,
+          hypothesis: this.designConfig.hypothesis_type,
+          alpha: parseFloat(this.designConfig.alpha || 0.05),
+          power: parseFloat(this.designConfig.power || 0.80),
+          allocation_ratio: parseFloat(this.designConfig.allocation_ratio || 1.0),
+          dropout_rate: parseFloat(this.designConfig.dropout_rate || 0.0),
+          mean_control: this.designConfig.mean_control,
+          mean_treatment: this.designConfig.mean_treatment,
+          sd_pooled: this.designConfig.sd_pooled,
+          delta_margin: this.designConfig.delta_margin,
+          prop_control: this.designConfig.prop_control,
+          prop_treatment: this.designConfig.prop_treatment,
+          hazard_ratio: this.designConfig.hazard_ratio,
+          event_rate_control: this.designConfig.event_rate_control,
+          sensitivity: this.designConfig.sensitivity,
+          prevalence: this.designConfig.prevalence,
+          ci_half_width: this.designConfig.ci_half_width,
+          cluster_size: this.designConfig.cluster_size,
+          icc: this.designConfig.icc,
+          vaccine_efficacy: this.designConfig.vaccine_efficacy,
+          null_ve: this.designConfig.null_ve,
+          attack_rate_control: this.designConfig.attack_rate_control,
+          dose_levels: this.designConfig.dose_levels,
+          cohort_size: this.designConfig.cohort_size
+        };
+        const r = await fetch('/api/designs/calculate_sample_size', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify(p)
+        });
+        if(r.ok) this.sampleSizeResult = await r.json();
+      } catch(e) {} finally { this.calculatingSS = false; }
     },
 
     async synthesizeTDM() {

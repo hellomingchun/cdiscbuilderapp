@@ -16,13 +16,13 @@ def test_study_catalog():
     # Check Oncology and Medical Device exist
     onco = get_design_by_id("ONCOLOGY_DOUBLE_BLIND_PFS")
     assert onco is not None
-    assert onco["category"] == "Oncology"
+    assert "Oncology" in onco["category"]
     assert onco["hypothesis_type"] == "superiority"
     assert onco["endpoint_type"] == "survival"
 
     device = get_design_by_id("DEVICE_NON_INFERIORITY")
     assert device is not None
-    assert device["category"] == "Medical Devices"
+    assert "Medical Devices" in device["category"]
     assert device["hypothesis_type"] == "non_inferiority"
     assert device["endpoint_type"] == "binary"
 
