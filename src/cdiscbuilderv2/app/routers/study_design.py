@@ -6,7 +6,7 @@ and automated CDISC Trial Design Model (TS, TA, TE, TV) synthesis.
 
 import logging
 from typing import Any, Dict, Optional
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Response
 from pydantic import BaseModel
 import yaml
 
@@ -186,5 +186,48 @@ async def api_generate_sap(req: GenerateDocRequest):
         custom_prompt=req.custom_prompt
     )
     return result
+
+
+class DownloadPDFRequest(BaseModel):
+    design_id: str
+    doc_type: str = "protocol"  # "protocol" or "sap"
+    markdown_content: str
+    protocol_id: Optional[str] = None
+    title: Optional[str] = None
+
+
+@router.post("/download_pdf")
+async def api_download_pdf(req: DownloadPDFRequest):
+    """Generates and streams a regulatory-grade PDF document."""
+    from ...pdf_builder import ClinicalPDFBuilder
+    
+    design = get_design_by_id(req.design_id)
+    doc_label = "CLINICAL TRIAL PROTOCOL (ICH GCP E6 R2)" if req.doc_type.lower() == "protocol" else "STATISTICAL ANALYSIS PLAN (ICH E9)"
+    
+    meta = {
+        "title": req.title or (design.get("title") if design else "Clinical Trial Document"),
+        "protocol_id": req.protocol_id or (design.get("id") if design else "PRT-CLIN-001"),
+        "phase": design.get("phase", "Phase 3") if design else "Phase 3",
+        "therapeutic_area": design.get("therapeutic_area", "General Medicine") if design else "General Medicine",
+        "design_type": design.get("design_type", "Randomized Controlled Trial") if design else "Randomized Controlled Trial"
+    }
+    
+    builder = ClinicalPDFBuilder()
+    pdf_bytes = builder.build_pdf_from_markdown(
+        title=meta["title"],
+        doc_type=doc_label,
+        markdown_text=req.markdown_content,
+        metadata=meta
+    )
+    
+    prefix = "protocol_" if req.doc_type.lower() == "protocol" else "sap_"
+    filename = f"{prefix}{meta['protocol_id'].lower()}.pdf"
+    
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'}
+    )
+
 
 

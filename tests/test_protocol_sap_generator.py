@@ -81,3 +81,17 @@ def test_api_generate_protocol_and_sap():
     data_sap = r_sap.json()
     assert data_sap["status"] == "SUCCESS"
     assert "STATISTICAL ANALYSIS PLAN" in data_sap["content"]
+
+    # Test PDF Generation Endpoint
+    r_pdf = client.post("/api/designs/download_pdf", json={
+        "design_id": "CROSSOVER_BIOEQUIVALENCE",
+        "doc_type": "protocol",
+        "markdown_content": data_prot["content"],
+        "protocol_id": "PRT-BE-001",
+        "title": "Bioequivalence Study Protocol"
+    })
+    assert r_pdf.status_code == 200
+    assert r_pdf.headers["content-type"] == "application/pdf"
+    assert len(r_pdf.content) > 1000
+    assert r_pdf.content[:4] == b"%PDF"
+

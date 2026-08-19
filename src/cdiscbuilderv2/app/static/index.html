@@ -564,13 +564,17 @@
         </div>
       </div>
       <div class="flex items-center gap-2">
+        <button @click="downloadPDF()" :disabled="downloadingPDF" class="px-3.5 py-1.5 text-xs font-semibold rounded-lg bg-clinical-600 hover:bg-clinical-700 disabled:opacity-50 text-white transition flex items-center gap-1.5 shadow-sm">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+          <span x-text="downloadingPDF?'Generating PDF...':'Download PDF'"></span>
+        </button>
         <button @click="copyDocContent()" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 transition flex items-center gap-1.5">
           <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
           <span x-text="docCopied?'Copied!':'Copy Markdown'"></span>
         </button>
         <button @click="downloadDoc('md')" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 transition flex items-center gap-1.5">
           <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-          Download .md
+          .md
         </button>
         <button @click="showDocModal=false" class="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
           <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
@@ -605,8 +609,7 @@ function clinForgeApp() {
     availableDomains: [], selectedDatasetDomain: '', datasetPreview: null,
     verificationRunning: false, verificationReports: {},
     exportRunning: false, exportOptions: { include_csv:true, include_xpt:true, include_yaml:true, include_define_xml:false },
-    verificationRunning: false, verificationReports: {},
-    exportRunning: false, exportOptions: { include_csv:true, include_xpt:true, include_yaml:true, include_define_xml:false },
+    downloadingPDF: false,
 
     async initApp() {
       const saved = localStorage.getItem('clinforge-theme');
@@ -782,6 +785,44 @@ function clinForgeApp() {
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(u);
+    },
+
+    async downloadPDF() {
+      if(!this.selectedDesign || !this.docContent) return;
+      this.downloadingPDF = true;
+      try {
+        const payload = {
+          design_id: this.selectedDesign.id,
+          doc_type: this.activeDocType,
+          markdown_content: this.docContent,
+          protocol_id: this.designConfig.protocol_id || 'PRT-' + this.selectedDesign.id,
+          title: this.docTitle
+        };
+        const r = await fetch('/api/designs/download_pdf', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify(payload)
+        });
+        if(r.ok) {
+          const blob = await r.blob();
+          const u = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = u;
+          const prefix = this.activeDocType === 'protocol' ? 'protocol_' : 'sap_';
+          const sid = (this.designConfig.protocol_id || this.selectedDesign.id).toLowerCase();
+          a.download = prefix + sid + '.pdf';
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(u);
+        } else {
+          alert('Failed to generate PDF document');
+        }
+      } catch(e) {
+        alert('Error generating PDF: ' + e.message);
+      } finally {
+        this.downloadingPDF = false;
+      }
     },
 
     async handleFileUpload(e){const f=e.target.files[0];if(f)await this.uploadXml(f);},
