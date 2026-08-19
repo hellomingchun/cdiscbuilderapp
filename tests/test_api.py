@@ -12,7 +12,7 @@ def client():
 def test_api_index(client):
     response = client.get("/")
     assert response.status_code == 200
-    assert "CDISC Builder" in response.text
+    assert "ClinForge" in response.text
 
 
 def test_api_clean_initial_state(client):
@@ -26,12 +26,13 @@ def test_api_load_odm_path(client):
     if not Path(cath_xml).exists():
         pytest.skip("CATH ODM XML not found")
 
-    response = client.post("/api/odm/load_path", json={"path": cath_xml})
+    response = client.post("/api/odm/load_path", json={"xml_path": cath_xml})
     assert response.status_code == 200
     data = response.json()
     assert data["status"] == "SUCCESS"
     assert data["subjects_count"] == 82
-    assert data["total_items"] > 5000
+    assert data["clinical_records"] > 5000
+    assert data["total_items"] > 50
 
 
 def test_api_upload_spec_and_pipeline(client):
@@ -60,7 +61,7 @@ rows:
     # 1. Load ODM XML
     cath_xml = "/home/ming/Documents/yamaa/cath/odm/odm.xml"
     if Path(cath_xml).exists():
-        client.post("/api/odm/load_path", json={"path": cath_xml})
+        client.post("/api/odm/load_path", json={"xml_path": cath_xml})
         
         # 2. Add spec using standard Yamaa format
         spec_res = client.post("/api/specs/DM", json={"domain": "DM", "yaml_content": spec_yaml})
@@ -78,7 +79,7 @@ def test_api_crf_forms_and_generate(client):
     if not Path(cath_xml).exists():
         pytest.skip("CATH ODM XML not found")
 
-    client.post("/api/odm/load_path", json={"path": cath_xml})
+    client.post("/api/odm/load_path", json={"xml_path": cath_xml})
     
     # 1. Fetch CRF forms
     forms_res = client.get("/api/ai/crf_forms")
@@ -107,7 +108,7 @@ def test_api_crf_forms_and_generate(client):
 
 def test_api_zip_export(client):
     import polars as pl
-    from cdiscbuilderv2.app.main import STATE
+    from cdiscbuilderv2.app.state import STATE
     STATE["built_domains"]["DM"] = pl.DataFrame({"STUDYID": ["ST01"], "DOMAIN": ["DM"], "USUBJID": ["001"]})
     res = client.get("/api/export/zip")
     assert res.status_code == 200

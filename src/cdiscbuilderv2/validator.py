@@ -247,8 +247,8 @@ class YamaaSchemaValidator:
         if "row_number" in deriv:
             recognized = True
             rn = deriv["row_number"]
-            if not isinstance(rn, dict):
-                self.errors.append(f"Column '{col_name}' 'row_number' derivation must be a dictionary.")
+            if not isinstance(rn, (dict, bool)):
+                self.errors.append(f"Column '{col_name}' 'row_number' derivation must be a dictionary or boolean.")
 
         if "function_" in deriv:
             recognized = True
