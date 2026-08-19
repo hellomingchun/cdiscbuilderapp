@@ -105,6 +105,35 @@ class ProtocolSAPGenerator:
             "content": sap_md
         }
 
+    @staticmethod
+    def _build_soa_table(visits: List[str]) -> str:
+        """Constructs a clean, valid GitHub Flavored Markdown table for the Schedule of Activities."""
+        if not visits:
+            visits = ["Screening", "Baseline", "Week 4", "Week 12", "End of Study"]
+        n_v = len(visits)
+        header = "| Protocol Assessment | " + " | ".join(visits) + " |"
+        separator = "|" + "|".join([":---"] * (n_v + 1)) + "|"
+        
+        def make_row(label: str, marks: List[str]) -> str:
+            padded = (marks + [""] * n_v)[:n_v]
+            return f"| {label} | " + " | ".join(padded) + " |"
+        
+        rows = [
+            header,
+            separator,
+            make_row("**Informed Consent**", ["X"] + [""] * (n_v - 1)),
+            make_row("**Demographics & Medical History**", ["X"] + [""] * (n_v - 1)),
+            make_row("**Inclusion / Exclusion Review**", ["X", "X"] + [""] * max(0, n_v - 2)),
+            make_row("**Randomization / Arm Assignment**", ["", "X"] + [""] * max(0, n_v - 2)),
+            make_row("**Investigational Product Dosing**", [""] + ["X"] * max(0, n_v - 2) + [""]),
+            make_row("**Vital Signs & Physical Exam**", ["X"] * n_v),
+            make_row("**Safety Laboratory Panel**", ["X"] * n_v),
+            make_row("**Primary Efficacy Assessment**", [""] + ["X" if (i % 2 == 1 or i == n_v - 1) else "" for i in range(1, n_v)]),
+            make_row("**Adverse Event Monitoring**", ["X"] * n_v),
+            make_row("**Concomitant Medications**", ["X"] * n_v),
+        ]
+        return "\n".join(rows)
+
     def _synthesize_protocol_expert(
         self,
         d: Dict[str, Any],
@@ -256,18 +285,7 @@ A {design_type.lower()} design incorporating {blinding.lower()} and {randomizati
 
 ## 6. STUDY SCHEDULE OF ACTIVITIES (SoA)
 
-| Protocol Assessment | {' | '.join(visits)} |
-|:---|{'|:---' * len(visits)}|
-| **Informed Consent** | X | {' | '.join(['' for _ in visits[1:]])} |
-| **Demographics & Medical History** | X | {' | '.join(['' for _ in visits[1:]])} |
-| **Inclusion / Exclusion Review** | X | X | {' | '.join(['' for _ in visits[2:]])} |
-| **Randomization / Arm Assignment** | | X | {' | '.join(['' for _ in visits[2:]])} |
-| **Investigational Product Dosing** | | {' | '.join(['X' for _ in visits[1:-1]])} | |
-| **Vital Signs & Physical Exam** | {' | '.join(['X' for _ in visits])} |
-| **Safety Laboratory Panel** | {' | '.join(['X' for _ in visits])} |
-| **Primary Efficacy Assessment** | | {' | '.join(['X' if i % 2 == 1 or i == len(visits)-1 else '' for i in range(1, len(visits))])} |
-| **Adverse Event Monitoring** | {' | '.join(['X' for _ in visits])} |
-| **Concomitant Medications** | {' | '.join(['X' for _ in visits])} |
+{self._build_soa_table(visits)}
 
 ---
 

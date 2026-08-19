@@ -30,6 +30,27 @@
         ::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:3px}
         .design-card{transition:all .2s ease}
         .design-card:hover{transform:translateY(-2px)}
+        .doc-markdown-content table { width: 100%; border-collapse: collapse; margin: 1.25rem 0; font-size: 0.75rem; }
+        .doc-markdown-content th { background-color: rgba(241, 245, 249, 0.9); padding: 0.6rem 0.75rem; text-align: left; font-weight: 700; border: 1px solid #cbd5e1; font-family: 'JetBrains Mono', monospace; }
+        .dark .doc-markdown-content th { background-color: rgba(30, 41, 59, 0.9); border-color: #334155; color: #f1f5f9; }
+        .doc-markdown-content td { padding: 0.5rem 0.75rem; border: 1px solid #e2e8f0; vertical-align: top; }
+        .dark .doc-markdown-content td { border-color: #334155; color: #cbd5e1; }
+        .doc-markdown-content tr:nth-child(even) { background-color: rgba(248, 250, 252, 0.5); }
+        .dark .doc-markdown-content tr:nth-child(even) { background-color: rgba(15, 23, 42, 0.4); }
+        .doc-markdown-content h1 { font-size: 1.35rem; font-weight: 800; margin-top: 1.5rem; margin-bottom: 0.5rem; padding-bottom: 0.35rem; border-bottom: 2px solid #0284c7; color: #0284c7; }
+        .dark .doc-markdown-content h1 { color: #38bdf8; border-bottom-color: #0369a1; }
+        .doc-markdown-content h2 { font-size: 1.1rem; font-weight: 700; margin-top: 1.35rem; margin-bottom: 0.4rem; padding-bottom: 0.25rem; border-bottom: 1px solid #e2e8f0; }
+        .dark .doc-markdown-content h2 { border-bottom-color: #334155; }
+        .doc-markdown-content h3 { font-size: 0.9rem; font-weight: 600; margin-top: 1rem; margin-bottom: 0.3rem; }
+        .doc-markdown-content hr { margin: 1.5rem 0; border: 0; border-top: 1px solid #e2e8f0; }
+        .dark .doc-markdown-content hr { border-top-color: #334155; }
+        .doc-markdown-content ul, .doc-markdown-content ol { padding-left: 1.25rem; margin: 0.5rem 0; }
+        .doc-markdown-content ol { list-style-type: decimal; }
+        .doc-markdown-content ul { list-style-type: disc; }
+        .doc-markdown-content li { margin-bottom: 0.3rem; }
+        .doc-markdown-content code { font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; padding: 0.15rem 0.35rem; background-color: rgba(241, 245, 249, 0.9); border-radius: 0.25rem; }
+        .dark .doc-markdown-content code { background-color: rgba(30, 41, 59, 0.9); color: #38bdf8; }
+        .doc-markdown-content pre { padding: 0.85rem; background-color: #0f172a; color: #f8fafc; border-radius: 0.5rem; overflow-x: auto; margin: 0.75rem 0; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; }
     </style>
 </head>
 <body class="bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 min-h-screen flex flex-col font-sans transition-colors duration-200"
@@ -563,7 +584,7 @@
     </div>
     <!-- Modal Body -->
     <div class="p-6 overflow-y-auto flex-1 bg-slate-50/50 dark:bg-slate-950/50">
-      <div x-html="renderDocMarkdown(docContent)" class="prose dark:prose-invert max-w-none text-xs leading-relaxed space-y-4 font-sans"></div>
+      <div x-html="renderDocMarkdown(docContent)" class="doc-markdown-content text-slate-800 dark:text-slate-200"></div>
     </div>
   </div>
 </div>
