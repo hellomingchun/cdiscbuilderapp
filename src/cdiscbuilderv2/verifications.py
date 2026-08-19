@@ -25,13 +25,17 @@ class VerificationReport:
         passed: bool,
         total_records: int,
         failing_records: int = 0,
-        sample_failures: Optional[List[Any]] = None
+        sample_failures: Optional[List[Any]] = None,
+        rule_id: Optional[str] = None,
+        message: Optional[str] = None
     ) -> None:
         self.checks.append({
             "domain": self.domain,
+            "rule_id": rule_id or check_type,
             "check_type": check_type,
             "target": target,
             "rule": rule_desc,
+            "message": message or (f"{target}: {rule_desc}" if target and not rule_desc.startswith(target) else rule_desc),
             "status": "PASS" if passed else "FAIL",
             "passed": passed,
             "total_records": total_records,
@@ -41,7 +45,7 @@ class VerificationReport:
 
     @property
     def is_valid(self) -> bool:
-        return all(c["passed"] for c in self.checks)
+        return len(self.checks) > 0 and all(c["passed"] for c in self.checks)
 
     @property
     def pass_count(self) -> int:
@@ -51,14 +55,28 @@ class VerificationReport:
     def fail_count(self) -> int:
         return sum(1 for c in self.checks if not c["passed"])
 
+    @property
+    def pass_rate(self) -> float:
+        total = len(self.checks)
+        return (self.pass_count / total) if total > 0 else 1.0
+
     def to_dict(self) -> Dict[str, Any]:
+        total = len(self.checks)
+        passed = self.pass_count
+        failed = self.fail_count
+        pass_rate = (passed / total) if total > 0 else 1.0
         return {
             "domain": self.domain,
-            "is_valid": self.is_valid,
-            "pass_count": self.pass_count,
-            "fail_count": self.fail_count,
+            "is_valid": self.is_valid and (failed == 0),
+            "pass_count": passed,
+            "fail_count": failed,
+            "total_rules": total,
+            "passed_rules": passed,
+            "failed_rules": failed,
+            "pass_rate": pass_rate,
             "checks": self.checks
         }
+
 
 
 class VerificationEngine:
@@ -226,4 +244,70 @@ class VerificationEngine:
                             failing_records=invalid_count
                         )
 
+        # 3. CDISC Baseline Conformance Suite (when no custom rules defined)
+        if len(report.checks) == 0:
+            # Check 1: Non-empty dataset
+            report.add_result(
+                check_type="CDISC_NOT_EMPTY",
+                rule_id="SD0001",
+                target="DATASET",
+                rule_desc=f"Dataset contains transformed clinical records (Total: {n_rows} rows)",
+                passed=(n_rows > 0),
+                total_records=n_rows,
+                failing_records=0 if n_rows > 0 else 1
+            )
+            # Check 2: Unique composite key
+            keys = spec.get("keys", [])
+            valid_keys = [k for k in keys if k in df.columns]
+            if valid_keys:
+                dups = df.select(valid_keys).is_duplicated()
+                dup_count = int(dups.sum())
+                report.add_result(
+                    check_type="DATASET_UNIQUE",
+                    rule_id="SD0002",
+                    target=", ".join(valid_keys),
+                    rule_desc=f"Unique composite key integrity: [{', '.join(valid_keys)}]",
+                    passed=(dup_count == 0),
+                    total_records=n_rows,
+                    failing_records=dup_count
+                )
+            # Check 3: STUDYID presence & non-missing
+            if "STUDYID" in df.columns:
+                miss_s = int((df["STUDYID"].is_null() | (df["STUDYID"].cast(pl.Utf8, strict=False) == "")).sum())
+                report.add_result(
+                    check_type="CDISC_STUDYID",
+                    rule_id="SD0003",
+                    target="STUDYID",
+                    rule_desc="Required variable STUDYID is populated across all records",
+                    passed=(miss_s == 0),
+                    total_records=n_rows,
+                    failing_records=miss_s
+                )
+            # Check 4: DOMAIN match
+            if "DOMAIN" in df.columns:
+                dom_s = df["DOMAIN"].cast(pl.Utf8, strict=False).drop_nulls()
+                dom_ok = (dom_s == domain).all() if dom_s.len() > 0 else False
+                report.add_result(
+                    check_type="CDISC_DOMAIN",
+                    rule_id="SD0004",
+                    target="DOMAIN",
+                    rule_desc=f"DOMAIN matches domain identifier '{domain}'",
+                    passed=bool(dom_ok),
+                    total_records=n_rows,
+                    failing_records=0 if dom_ok else n_rows
+                )
+            # Check 5: USUBJID for subject domains
+            if domain not in ("TS", "TA", "TE", "TV", "TI") and "USUBJID" in df.columns:
+                miss_u = int((df["USUBJID"].is_null() | (df["USUBJID"].cast(pl.Utf8, strict=False) == "")).sum())
+                report.add_result(
+                    check_type="CDISC_USUBJID",
+                    rule_id="SD0005",
+                    target="USUBJID",
+                    rule_desc="Required variable USUBJID is populated across all subjects",
+                    passed=(miss_u == 0),
+                    total_records=n_rows,
+                    failing_records=miss_u
+                )
+
         return report
+
