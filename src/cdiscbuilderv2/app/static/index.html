@@ -1488,6 +1488,7 @@ columns:
                         const res = await fetch(`/api/specs/${domain}`);
                         const data = await res.json();
                         this.activeYamlContent = data.yaml_content || '';
+                        await this.validateCurrentYaml();
                     } catch (e) {
                         console.error('Failed to fetch spec content', e);
                     }
