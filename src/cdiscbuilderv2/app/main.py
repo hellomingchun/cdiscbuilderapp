@@ -251,6 +251,7 @@ async def upload_odm_xml(file: UploadFile = File(...)):
         STATE["odm_parser"] = parser
         STATE["df_long"] = parser.df_long
         STATE["metadata_df"] = parser.get_metadata_summary()
+        STATE["specs"] = {}
         STATE["built_domains"] = {}
         STATE["verification_reports"] = {}
 
@@ -280,6 +281,7 @@ async def load_odm_path(req: LoadPathRequest):
         STATE["odm_parser"] = parser
         STATE["df_long"] = parser.df_long
         STATE["metadata_df"] = parser.get_metadata_summary()
+        STATE["specs"] = {}
         STATE["built_domains"] = {}
         STATE["verification_reports"] = {}
 

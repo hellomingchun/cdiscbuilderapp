@@ -294,9 +294,9 @@
                     </div>
 
                     <div class="flex items-center gap-2">
-                        <button @click="generateFromSelectedForms()" :disabled="aiGenerating || crfForms.length === 0" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs px-3.5 py-2 rounded-lg flex items-center gap-1.5 transition disabled:opacity-40 shadow-sm">
+                        <button @click="generateFromSelectedForms()" :disabled="aiGenerating || getSelectedFormsCount() === 0" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs px-3.5 py-2 rounded-lg flex items-center gap-1.5 transition disabled:opacity-40 shadow-sm">
                             <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
-                            <span x-text="aiGenerating ? 'Synthesizing...' : 'Generate Specs for Selected Forms'"></span>
+                            <span x-text="aiGenerating ? 'Synthesizing...' : ('Generate Specs (' + getSelectedFormsCount() + ' selected)')"></span>
                         </button>
                     </div>
                 </div>
@@ -306,7 +306,7 @@
                         <thead class="bg-slate-50 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 font-semibold uppercase text-[10px] tracking-wider">
                             <tr>
                                 <th class="px-3 py-2 text-center w-10">
-                                    <input type="checkbox" @change="toggleAllForms($event.target.checked)" checked class="rounded border-slate-300 dark:border-slate-700 text-blue-600 focus:ring-0">
+                                    <input type="checkbox" @change="toggleAllForms($event.target.checked)" :checked="isAllFormsSelected()" class="rounded border-slate-300 dark:border-slate-700 text-blue-600 focus:ring-0">
                                 </th>
                                 <th class="px-3 py-2">Form OID</th>
                                 <th class="px-3 py-2">Form Description / Label</th>
@@ -381,6 +381,12 @@
                                     </div>
                                     <span class="text-[10px] text-slate-400" x-text="spec.type || 'Custom'"></span>
                                 </button>
+                            </template>
+                            <template x-if="specsList.length === 0">
+                                <div class="py-12 px-3 text-center text-slate-400 dark:text-slate-500 text-xs">
+                                    <p class="font-semibold mb-1">No Specs Generated Yet</p>
+                                    <p class="text-[11px]">Select CRF forms above and click 'Generate Specs' to build SDTM specifications.</p>
+                                </div>
                             </template>
                         </div>
                     </div>
@@ -1105,12 +1111,20 @@ columns:
                             this.selectedForms = {};
                             for (const f of this.crfForms) {
                                 this.formMappings[f.FormOID] = f.SuggestedDomain;
-                                this.selectedForms[f.FormOID] = true;
+                                this.selectedForms[f.FormOID] = false; // Unchecked by default
                             }
                         }
                     } catch (e) {
                         console.error('Failed to fetch CRF forms', e);
                     }
+                },
+
+                getSelectedFormsCount() {
+                    return Object.values(this.selectedForms).filter(Boolean).length;
+                },
+
+                isAllFormsSelected() {
+                    return this.crfForms.length > 0 && this.crfForms.every(f => this.selectedForms[f.FormOID]);
                 },
 
                 toggleAllForms(checked) {

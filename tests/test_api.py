@@ -57,13 +57,16 @@ rows:
     derivations:
       USUBJID: { source: SubjectKey }
 """
-    spec_res = client.post("/api/specs/DM", json={"domain": "DM", "yaml_content": spec_yaml})
-    assert spec_res.status_code == 200
-
-    # 2. Run pipeline
+    # 1. Load ODM XML
     cath_xml = "/home/ming/Documents/yamaa/cath/odm/odm.xml"
     if Path(cath_xml).exists():
         client.post("/api/odm/load_path", json={"path": cath_xml})
+        
+        # 2. Add spec using standard Yamaa format
+        spec_res = client.post("/api/specs/DM", json={"domain": "DM", "yaml_content": spec_yaml})
+        assert spec_res.status_code == 200
+
+        # 3. Run pipeline
         response = client.post("/api/pipeline/run", json={"formats": ["csv", "parquet"]})
         assert response.status_code == 200
         data = response.json()
