@@ -707,13 +707,62 @@ async def get_all_verifications():
     return {"verifications": STATE["verification_reports"]}
 
 
+@app.get("/api/export/zip")
+@app.get("/api/export_all_zip")
+@app.get("/api/download/zip")
+async def export_all_zip():
+    """Download zip archive of all generated SDTM datasets."""
+    out_dir = STATE["output_dir"] / "sdtm_output"
+    
+    # If not written to disk yet but built_domains exists, save them now
+    if STATE["built_domains"]:
+        out_dir.mkdir(parents=True, exist_ok=True)
+        for domain, df in STATE["built_domains"].items():
+            if domain.startswith("_"):
+                continue
+            csv_p = out_dir / f"{domain.lower()}.csv"
+            parq_p = out_dir / f"{domain.lower()}.parquet"
+            xpt_p = out_dir / f"{domain.lower()}.xpt"
+            if not csv_p.exists():
+                df.write_csv(csv_p)
+            if not parq_p.exists():
+                df.write_parquet(parq_p)
+            if not xpt_p.exists():
+                try:
+                    import pyreadstat
+                    pyreadstat.write_xport(df.to_pandas(), str(xpt_p), table_name=domain.upper())
+                except Exception as e:
+                    logger.warning(f"Could not export xpt for {domain}: {e}")
+
+    if not out_dir.exists() or not list(out_dir.glob("*")):
+        raise HTTPException(status_code=400, detail="No output datasets found. Please run the build pipeline in Step 3 first.")
+
+    zip_buffer = io.BytesIO()
+    with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
+        for file_p in out_dir.glob("*"):
+            if file_p.is_file():
+                zip_file.write(file_p, arcname=file_p.name)
+
+    zip_buffer.seek(0)
+    return StreamingResponse(
+        zip_buffer,
+        media_type="application/zip",
+        headers={
+            "Content-Disposition": "attachment; filename=sdtm_submission_package.zip",
+            "Access-Control-Expose-Headers": "Content-Disposition"
+        }
+    )
+
+
 @app.get("/api/export/{domain}/{format}")
+@app.get("/api/download/{domain}/{format}")
 async def export_domain_file(domain: str, format: str):
     """Download single domain file (csv, parquet, xpt)."""
     if domain not in STATE["built_domains"]:
-        raise HTTPException(status_code=404, detail=f"Domain dataset '{domain}' not found")
+        raise HTTPException(status_code=404, detail=f"Domain dataset '{domain}' not found. Please run the build pipeline first.")
 
     out_dir = STATE["output_dir"] / "sdtm_output"
+    out_dir.mkdir(parents=True, exist_ok=True)
     file_path = out_dir / f"{domain.lower()}.{format.lower()}"
 
     if not file_path.exists():
@@ -739,25 +788,4 @@ async def export_domain_file(domain: str, format: str):
         path=str(file_path),
         filename=file_path.name,
         media_type=media_types.get(format.lower(), "application/octet-stream")
-    )
-
-
-@app.get("/api/export_all_zip")
-async def export_all_zip():
-    """Download zip archive of all generated SDTM datasets."""
-    out_dir = STATE["output_dir"] / "sdtm_output"
-    if not out_dir.exists() or not list(out_dir.glob("*")):
-        raise HTTPException(status_code=400, detail="No output datasets found. Please run the build pipeline first.")
-
-    zip_buffer = io.BytesIO()
-    with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
-        for file_p in out_dir.glob("*"):
-            if file_p.is_file():
-                zip_file.write(file_p, arcname=file_p.name)
-
-    zip_buffer.seek(0)
-    return StreamingResponse(
-        zip_buffer,
-        media_type="application/zip",
-        headers={"Content-Disposition": "attachment; filename=sdtm_submission_package.zip"}
     )

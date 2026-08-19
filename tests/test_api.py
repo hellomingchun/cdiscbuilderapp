@@ -101,3 +101,12 @@ def test_api_crf_forms_and_generate(client):
     dm_res = client.get("/api/datasets/DM")
     assert dm_res.status_code == 200
     assert dm_res.json()["total"] == 82
+
+def test_api_zip_export(client):
+    import polars as pl
+    from cdiscbuilderv2.app.main import STATE
+    STATE["built_domains"]["DM"] = pl.DataFrame({"STUDYID": ["ST01"], "DOMAIN": ["DM"], "USUBJID": ["001"]})
+    res = client.get("/api/export/zip")
+    assert res.status_code == 200
+    assert "application/zip" in res.headers.get("content-type", "")
+    assert len(res.content) > 0
