@@ -134,6 +134,7 @@ async def ai_generate_from_forms(req: GenerateFromFormsRequest):
     )
 
     generated_map = ai_gen.generate_schemas_for_form_mappings(req.form_mappings, custom_prompt=req.custom_prompt)
+    STATE["specs"] = {}
     for d_name, yaml_text in generated_map.items():
         parsed = yaml.safe_load(yaml_text)
         parsed["yaml_text"] = yaml_text

@@ -1161,6 +1161,9 @@ columns:
                         const data = await res.json();
                         if (res.ok) {
                             await this.fetchSpecs();
+                            if (data.generated_domains && data.generated_domains.length > 0) {
+                                await this.selectSpec(data.generated_domains[0]);
+                            }
                             this.$nextTick(() => lucide.createIcons());
                         } else {
                             alert(`AI Synthesis failed: ${data.detail}`);
@@ -1230,10 +1233,16 @@ columns:
                         const res = await fetch('/api/specs');
                         const data = await res.json();
                         this.specsList = data.specs || [];
-                        if (this.specsList.length > 0 && !this.selectedDomain) {
-                            await this.selectSpec(this.specsList[0].domain);
-                        } else if (this.selectedDomain) {
-                            await this.selectSpec(this.selectedDomain);
+                        if (this.specsList.length > 0) {
+                            if (!this.selectedDomain || !this.specsList.some(s => s.domain === this.selectedDomain)) {
+                                await this.selectSpec(this.specsList[0].domain);
+                            } else {
+                                await this.selectSpec(this.selectedDomain);
+                            }
+                        } else {
+                            this.selectedDomain = '';
+                            this.activeYamlContent = '';
+                            this.schemaValidation = { is_valid: true, errors: [], warnings: [] };
                         }
                     } catch (e) {
                         console.error('Failed to fetch specs', e);

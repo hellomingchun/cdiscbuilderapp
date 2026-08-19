@@ -335,7 +335,9 @@ class AISDTMSchemaGenerator:
 
         for f in crf_forms:
             f_oid = f["FormOID"]
-            target_domain = mappings.get(f_oid, f["SuggestedDomain"]).upper()
+            if f_oid not in mappings:
+                continue
+            target_domain = mappings[f_oid].upper()
             if target_domain not in forms_by_domain:
                 forms_by_domain[target_domain] = []
             forms_by_domain[target_domain].append(f)

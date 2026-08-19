@@ -75,3 +75,24 @@ def test_ai_generator_synthesis_and_execution():
     assert vs_df.height > 0
     assert "VSTESTCD" in vs_df.columns
     assert "VSSTRESN" in vs_df.columns
+
+def test_ai_generator_single_form_mapping():
+    cath_xml = Path("/home/ming/Documents/yamaa/cath/odm/odm.xml")
+    if not cath_xml.exists():
+        pytest.skip("CATH XML not found")
+
+    parser = ODMParser(cath_xml)
+    generator = AISDTMSchemaGenerator(
+        metadata_df=parser.get_metadata_summary(),
+        df_long=parser.df_long
+    )
+
+    # User selects ONLY 1 form
+    single_mapping = {"FO.NCT00789880.DM": "DM"}
+    schemas = generator.generate_schemas_for_form_mappings(single_mapping)
+    
+    # Must contain ONLY DM, and no other domains!
+    assert len(schemas) == 1
+    assert "DM" in schemas
+    assert "VS" not in schemas
+    assert "AE" not in schemas
