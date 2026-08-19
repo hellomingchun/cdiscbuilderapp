@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cdiscbuilderv2"
+version = "0.2.0"
+description = "Next generation CDISC builder using Yamaa schema and Polars with EDC ODM XML ingestion"
+readme = "README.md"
+authors = [{name = "Ming-Chun Chen", email = "hellomingchun@gmail.com"}]
+dependencies = [
+    "pyyaml>=6.0",
+    "polars>=0.20.0",
+    "defusedxml>=0.7.1",
+    "fastapi>=0.110.0",
+    "uvicorn>=0.28.0",
+    "python-multipart>=0.0.9",
+    "pyreadstat>=1.2.0",
+    "pytest>=7.0.0"
+]
+requires-python = ">=3.9"
+
+[project.scripts]
+cdiscbuilder = "cdiscbuilderv2.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+cdiscbuilderv2 = [
+    "app/static/*",
+    "schemas/**/*",
+    "schemas/standards/*",
+    "schemas/templates/*",
+    "schemas/examples/cath/*"
+]
