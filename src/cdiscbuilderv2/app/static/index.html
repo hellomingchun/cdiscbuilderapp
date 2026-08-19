@@ -1,105 +1,132 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CDISC Builder v2 — AI-Driven EDC to SDTM Automation (Yamaa Schema)</title>
-    <!-- Tailwind CSS -->
+    <title>CDISC Builder v2 — EDC to SDTM Automation Engine</title>
+    
+    <!-- Tailwind CSS with Dark Mode Class Support -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
+            darkMode: 'class',
             theme: {
                 extend: {
                     colors: {
                         clinical: {
-                            50: '#f0f7ff',
-                            100: '#e0effe',
-                            500: '#0284c7',
-                            600: '#0369a1',
-                            700: '#075985',
-                            800: '#0c4a6e',
-                            900: '#082f49',
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            200: '#bae6fd',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                            800: '#075985',
+                            900: '#0c4a6e',
                         }
+                    },
+                    fontFamily: {
+                        mono: ['"JetBrains Mono"', '"Fira Code"', 'Consolas', 'monospace']
                     }
                 }
             }
         }
     </script>
+    
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
+    
     <!-- Alpine.js -->
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
     <style>
         [x-cloak] { display: none !important; }
         .code-editor {
-            font-family: 'Fira Code', 'Cascadia Code', Consolas, Monaco, monospace;
+            font-family: 'JetBrains Mono', 'Fira Code', Consolas, Monaco, monospace;
             tab-size: 2;
         }
+        /* Custom subtle scrollbars */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        .dark ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+        .dark ::-webkit-scrollbar-thumb:hover { background: #475569; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
     </style>
 </head>
-<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col font-sans" x-data="cdiscApp()" x-init="initApp()">
+<body class="bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 min-h-screen flex flex-col font-sans transition-colors duration-200" x-data="cdiscApp()" x-init="initApp()">
 
     <!-- Top Navigation Bar -->
-    <header class="bg-slate-950 border-b border-slate-800 sticky top-0 z-50">
+    <header class="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 sticky top-0 z-50 transition-colors">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <!-- Brand Logo & Study Title -->
             <div class="flex items-center space-x-3">
-                <div class="w-9 h-9 rounded-lg bg-gradient-to-tr from-blue-600 via-indigo-500 to-cyan-400 flex items-center justify-center shadow-lg shadow-blue-500/20">
-                    <i data-lucide="sparkles" class="w-5 h-5 text-white"></i>
+                <div class="w-8 h-8 rounded-lg bg-blue-600 dark:bg-blue-600 flex items-center justify-center text-white shadow-sm">
+                    <i data-lucide="database" class="w-4 h-4"></i>
                 </div>
                 <div>
-                    <h1 class="text-lg font-bold text-white tracking-tight flex items-center gap-2">
-                        CDISC Builder <span class="text-xs px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 font-semibold border border-indigo-500/30">AI SDTM Engine</span>
+                    <h1 class="text-base font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
+                        CDISC Builder <span class="text-[10px] px-2 py-0.5 rounded font-medium bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">v2.0</span>
                     </h1>
-                    <p class="text-xs text-slate-400">EDC XML (ODM) &rarr; AI Schema Synthesis (Yamaa v1.0) &rarr; SDTM (Polars)</p>
+                    <p class="text-[11px] text-slate-500 dark:text-slate-400">Yamaa Schema Standards · Polars Engine · CDISC SDTM 3.3/3.4</p>
                 </div>
             </div>
 
-            <!-- Header Actions & AI Config Modal Trigger -->
-            <div class="flex items-center space-x-3">
+            <!-- Header Actions, Theme Switcher & AI Provider -->
+            <div class="flex items-center space-x-2.5">
+                <!-- Theme Toggle Button -->
+                <button @click="toggleTheme()" class="p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition" :title="isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'">
+                    <template x-if="isDarkMode">
+                        <i data-lucide="sun" class="w-4 h-4 text-amber-400"></i>
+                    </template>
+                    <template x-if="!isDarkMode">
+                        <i data-lucide="moon" class="w-4 h-4 text-slate-600"></i>
+                    </template>
+                </button>
+
                 <!-- AI Provider Badge & Settings -->
-                <button @click="showSettingsModal = true" class="bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-300 text-xs px-3 py-1.5 rounded-lg flex items-center gap-2 transition">
-                    <span class="w-2 h-2 rounded-full" :class="aiConfig.apiKey ? 'bg-emerald-400' : 'bg-blue-400'"></span>
+                <button @click="showSettingsModal = true" class="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-xs px-3 py-1.5 rounded-lg flex items-center gap-2 transition">
+                    <span class="w-2 h-2 rounded-full" :class="aiConfig.apiKey ? 'bg-emerald-500' : 'bg-blue-500'"></span>
                     <span class="font-medium" x-text="getProviderLabel()"></span>
                     <i data-lucide="settings" class="w-3.5 h-3.5 text-slate-400"></i>
                 </button>
 
-                <!-- Study Status -->
+                <!-- Active Study Badge -->
                 <template x-if="studyInfo.ProtocolName || studyInfo.StudyName">
-                    <div class="bg-slate-900 border border-slate-700 px-3 py-1.5 rounded-md text-xs flex items-center space-x-2">
-                        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                        <span class="text-slate-300 font-medium" x-text="studyInfo.ProtocolName || studyInfo.StudyName"></span>
-                        <span class="text-slate-500">|</span>
-                        <span class="text-cyan-400" x-text="(studyStats.subjects_count || 0) + ' Subjects'"></span>
+                    <div class="bg-blue-50 dark:bg-slate-800 border border-blue-200 dark:border-slate-700 px-3 py-1.5 rounded-lg text-xs flex items-center space-x-2">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                        <span class="text-slate-800 dark:text-slate-200 font-medium" x-text="studyInfo.ProtocolName || studyInfo.StudyName"></span>
+                        <span class="text-slate-400 dark:text-slate-500">|</span>
+                        <span class="text-blue-600 dark:text-blue-400 font-medium" x-text="(studyStats.subjects_count || 0) + ' Subjects'"></span>
                     </div>
                 </template>
             </div>
         </div>
 
         <!-- Navigation Tabs -->
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex space-x-1 border-t border-slate-800/80">
-            <button @click="activeTab = 'ingest'" :class="activeTab === 'ingest' ? 'border-blue-500 text-blue-400 bg-slate-900/50' : 'border-transparent text-slate-400 hover:text-slate-200'" class="px-4 py-2.5 text-xs font-semibold border-b-2 transition flex items-center gap-2">
-                <i data-lucide="file-code-2" class="w-4 h-4"></i>
-                <span>1. EDC XML Ingest & CRF</span>
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex space-x-1 border-t border-slate-200 dark:border-slate-800 overflow-x-auto">
+            <button @click="activeTab = 'ingest'" :class="activeTab === 'ingest' ? 'border-blue-600 text-blue-600 dark:text-blue-400 bg-blue-50/50 dark:bg-slate-800/50' : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'" class="px-3.5 py-2.5 text-xs font-semibold border-b-2 transition flex items-center gap-2 whitespace-nowrap">
+                <i data-lucide="file-code" class="w-4 h-4"></i>
+                <span>1. EDC Ingest</span>
             </button>
-            <button @click="activeTab = 'specs'" :class="activeTab === 'specs' ? 'border-blue-500 text-blue-400 bg-slate-900/50' : 'border-transparent text-slate-400 hover:text-slate-200'" class="px-4 py-2.5 text-xs font-semibold border-b-2 transition flex items-center gap-2">
-                <i data-lucide="sparkles" class="w-4 h-4 text-indigo-400"></i>
-                <span>2. AI Yamaa Schema Studio</span>
+            <button @click="activeTab = 'specs'" :class="activeTab === 'specs' ? 'border-blue-600 text-blue-600 dark:text-blue-400 bg-blue-50/50 dark:bg-slate-800/50' : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'" class="px-3.5 py-2.5 text-xs font-semibold border-b-2 transition flex items-center gap-2 whitespace-nowrap">
+                <i data-lucide="sparkles" class="w-4 h-4"></i>
+                <span>2. Schema Studio</span>
             </button>
-            <button @click="activeTab = 'pipeline'" :class="activeTab === 'pipeline' ? 'border-blue-500 text-blue-400 bg-slate-900/50' : 'border-transparent text-slate-400 hover:text-slate-200'" class="px-4 py-2.5 text-xs font-semibold border-b-2 transition flex items-center gap-2">
-                <i data-lucide="play-circle" class="w-4 h-4"></i>
+            <button @click="activeTab = 'pipeline'" :class="activeTab === 'pipeline' ? 'border-blue-600 text-blue-600 dark:text-blue-400 bg-blue-50/50 dark:bg-slate-800/50' : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'" class="px-3.5 py-2.5 text-xs font-semibold border-b-2 transition flex items-center gap-2 whitespace-nowrap">
+                <i data-lucide="play" class="w-4 h-4"></i>
                 <span>3. Build Pipeline</span>
             </button>
-            <button @click="activeTab = 'viewer'" :class="activeTab === 'viewer' ? 'border-blue-500 text-blue-400 bg-slate-900/50' : 'border-transparent text-slate-400 hover:text-slate-200'" class="px-4 py-2.5 text-xs font-semibold border-b-2 transition flex items-center gap-2">
-                <i data-lucide="table" class="w-4 h-4"></i>
-                <span>4. SDTM Data Explorer</span>
+            <button @click="activeTab = 'viewer'" :class="activeTab === 'viewer' ? 'border-blue-600 text-blue-600 dark:text-blue-400 bg-blue-50/50 dark:bg-slate-800/50' : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'" class="px-3.5 py-2.5 text-xs font-semibold border-b-2 transition flex items-center gap-2 whitespace-nowrap">
+                <i data-lucide="table-2" class="w-4 h-4"></i>
+                <span>4. SDTM Explorer</span>
             </button>
-            <button @click="activeTab = 'verifications'" :class="activeTab === 'verifications' ? 'border-blue-500 text-blue-400 bg-slate-900/50' : 'border-transparent text-slate-400 hover:text-slate-200'" class="px-4 py-2.5 text-xs font-semibold border-b-2 transition flex items-center gap-2">
+            <button @click="activeTab = 'verifications'" :class="activeTab === 'verifications' ? 'border-blue-600 text-blue-600 dark:text-blue-400 bg-blue-50/50 dark:bg-slate-800/50' : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'" class="px-3.5 py-2.5 text-xs font-semibold border-b-2 transition flex items-center gap-2 whitespace-nowrap">
                 <i data-lucide="shield-check" class="w-4 h-4"></i>
-                <span>5. Validation Dashboard</span>
+                <span>5. Conformance</span>
             </button>
-            <button @click="activeTab = 'export'" :class="activeTab === 'export' ? 'border-blue-500 text-blue-400 bg-slate-900/50' : 'border-transparent text-slate-400 hover:text-slate-200'" class="px-4 py-2.5 text-xs font-semibold border-b-2 transition flex items-center gap-2">
-                <i data-lucide="download-cloud" class="w-4 h-4"></i>
-                <span>6. Export & Package</span>
+            <button @click="activeTab = 'export'" :class="activeTab === 'export' ? 'border-blue-600 text-blue-600 dark:text-blue-400 bg-blue-50/50 dark:bg-slate-800/50' : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'" class="px-3.5 py-2.5 text-xs font-semibold border-b-2 transition flex items-center gap-2 whitespace-nowrap">
+                <i data-lucide="download" class="w-4 h-4"></i>
+                <span>6. Export Center</span>
             </button>
         </div>
     </header>
@@ -109,342 +136,311 @@
 
         <!-- ================= TAB 1: EDC XML INGEST & CRF EXPLORER ================= -->
         <div x-show="activeTab === 'ingest'" x-cloak class="space-y-6">
-            <!-- Upload Box & Summary -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <!-- File Upload Box -->
-                <div class="bg-slate-950 border border-slate-800 rounded-xl p-6 flex flex-col justify-between">
+                <!-- Upload Box -->
+                <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6 flex flex-col justify-between shadow-sm">
                     <div>
-                        <h2 class="text-sm font-bold text-white flex items-center gap-2 mb-2">
-                            <i data-lucide="upload" class="w-4 h-4 text-blue-400"></i>
+                        <h2 class="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2 mb-2">
+                            <i data-lucide="upload-cloud" class="w-4 h-4 text-blue-600 dark:text-blue-400"></i>
                             <span>Upload EDC ODM XML</span>
                         </h2>
-                        <p class="text-xs text-slate-400 mb-4">Select or drop an exported CDISC XML file (.xml) from OpenClinica, Medidata Rave, Castor, or clinical trial simulator.</p>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 mb-4">Ingest raw CDISC XML export from OpenClinica, Medidata Rave, Castor, or electronic trial databases.</p>
                         
-                        <label class="border-2 border-dashed border-slate-700 hover:border-blue-500 rounded-lg p-6 flex flex-col items-center justify-center cursor-pointer transition bg-slate-900/40">
-                            <i data-lucide="file-up" class="w-8 h-8 text-blue-400 mb-2"></i>
-                            <span class="text-xs font-medium text-slate-200">Click to select .xml file</span>
-                            <span class="text-[11px] text-slate-500 mt-1">Supports CDISC ODM v1.2, v1.3, v2.0</span>
+                        <label class="border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-blue-500 dark:hover:border-blue-400 rounded-lg p-6 flex flex-col items-center justify-center cursor-pointer transition bg-slate-50/50 dark:bg-slate-800/30">
+                            <i data-lucide="file-up" class="w-8 h-8 text-blue-600 dark:text-blue-400 mb-2"></i>
+                            <span class="text-xs font-medium text-slate-700 dark:text-slate-200">Select ODM XML file</span>
+                            <span class="text-[11px] text-slate-400 mt-1">Supports CDISC ODM v1.2, v1.3, v2.0</span>
                             <input type="file" accept=".xml" class="hidden" @change="uploadXmlFile($event)">
                         </label>
                     </div>
 
-                    <div class="mt-4 pt-4 border-t border-slate-800/80 text-xs text-slate-500 flex items-center gap-1.5">
-                        <i data-lucide="shield" class="w-3.5 h-3.5 text-emerald-400"></i>
-                        <span>XML parsed securely in-memory with Polars</span>
+                    <div class="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800 text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+                        <i data-lucide="shield" class="w-3.5 h-3.5 text-emerald-500"></i>
+                        <span>Secure in-memory parsing with Polars</span>
                     </div>
                 </div>
 
                 <!-- Study Summary Metrics -->
-                <div class="md:col-span-2 bg-slate-950 border border-slate-800 rounded-xl p-6">
-                    <h2 class="text-sm font-bold text-white flex items-center gap-2 mb-4">
-                        <i data-lucide="activity" class="w-4 h-4 text-emerald-400"></i>
-                        <span>Study & EDC Ingestion Manifest</span>
+                <div class="md:col-span-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6 shadow-sm">
+                    <h2 class="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2 mb-4">
+                        <i data-lucide="activity" class="w-4 h-4 text-blue-600 dark:text-blue-400"></i>
+                        <span>Study Overview &amp; EDC Metadata</span>
                     </h2>
-                    
-                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
-                        <div class="bg-slate-900 border border-slate-800 p-3 rounded-lg">
-                            <span class="text-[11px] text-slate-400">Subjects (N)</span>
-                            <div class="text-xl font-bold text-white" x-text="studyStats.subjects_count || '0'"></div>
-                        </div>
-                        <div class="bg-slate-900 border border-slate-800 p-3 rounded-lg">
-                            <span class="text-[11px] text-slate-400">Total Item Values</span>
-                            <div class="text-xl font-bold text-cyan-400" x-text="studyStats.total_records ? studyStats.total_records.toLocaleString() : '0'"></div>
-                        </div>
-                        <div class="bg-slate-900 border border-slate-800 p-3 rounded-lg">
-                            <span class="text-[11px] text-slate-400">CRF Forms</span>
-                            <div class="text-xl font-bold text-blue-400" x-text="studyStats.forms ? studyStats.forms.length : '0'"></div>
-                        </div>
-                        <div class="bg-slate-900 border border-slate-800 p-3 rounded-lg">
-                            <span class="text-[11px] text-slate-400">Item Definitions</span>
-                            <div class="text-xl font-bold text-indigo-400" x-text="studyStats.item_defs_count || '0'"></div>
-                        </div>
-                    </div>
 
-                    <div class="bg-slate-900/60 border border-slate-800/80 rounded-lg p-3 text-xs space-y-1.5">
-                        <div class="flex justify-between"><span class="text-slate-400">Study Name:</span> <span class="text-slate-200 font-medium" x-text="studyInfo.StudyName || 'Awaiting file upload...'"></span></div>
-                        <div class="flex justify-between"><span class="text-slate-400">Protocol:</span> <span class="text-slate-200 font-medium" x-text="studyInfo.ProtocolName || 'N/A'"></span></div>
-                        <div class="flex justify-between"><span class="text-slate-400">Description:</span> <span class="text-slate-300 truncate max-w-md" x-text="studyInfo.Description || 'N/A'"></span></div>
-                    </div>
+                    <template x-if="studyInfo.ProtocolName || studyInfo.StudyName">
+                        <div class="space-y-4">
+                            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                                <div class="bg-slate-50 dark:bg-slate-800/60 p-3 rounded-lg border border-slate-200 dark:border-slate-700/60">
+                                    <div class="text-[10px] text-slate-500 dark:text-slate-400 font-semibold uppercase tracking-wider">Protocol</div>
+                                    <div class="text-sm font-bold text-slate-900 dark:text-white truncate" x-text="studyInfo.ProtocolName || 'N/A'"></div>
+                                </div>
+                                <div class="bg-slate-50 dark:bg-slate-800/60 p-3 rounded-lg border border-slate-200 dark:border-slate-700/60">
+                                    <div class="text-[10px] text-slate-500 dark:text-slate-400 font-semibold uppercase tracking-wider">Subjects</div>
+                                    <div class="text-sm font-bold text-blue-600 dark:text-blue-400" x-text="studyStats.subjects_count || 0"></div>
+                                </div>
+                                <div class="bg-slate-50 dark:bg-slate-800/60 p-3 rounded-lg border border-slate-200 dark:border-slate-700/60">
+                                    <div class="text-[10px] text-slate-500 dark:text-slate-400 font-semibold uppercase tracking-wider">CRF Items</div>
+                                    <div class="text-sm font-bold text-slate-900 dark:text-white" x-text="(studyStats.total_items || 0).toLocaleString()"></div>
+                                </div>
+                                <div class="bg-slate-50 dark:bg-slate-800/60 p-3 rounded-lg border border-slate-200 dark:border-slate-700/60">
+                                    <div class="text-[10px] text-slate-500 dark:text-slate-400 font-semibold uppercase tracking-wider">Clinical Records</div>
+                                    <div class="text-sm font-bold text-slate-900 dark:text-white" x-text="(studyStats.clinical_records || 0).toLocaleString()"></div>
+                                </div>
+                            </div>
+
+                            <div class="flex justify-between items-center pt-2">
+                                <span class="text-xs text-slate-500 dark:text-slate-400">File: <span class="font-mono text-slate-700 dark:text-slate-200" x-text="studyStats.filename"></span></span>
+                                <button @click="activeTab = 'specs'" class="bg-blue-600 hover:bg-blue-700 text-white text-xs px-4 py-2 rounded-lg font-semibold flex items-center gap-1.5 transition">
+                                    <span>Proceed to Schema Studio</span>
+                                    <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </template>
+
+                    <template x-if="!studyInfo.ProtocolName && !studyInfo.StudyName">
+                        <div class="h-44 flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 border border-dashed border-slate-200 dark:border-slate-800 rounded-lg">
+                            <i data-lucide="file-spreadsheet" class="w-8 h-8 mb-2 opacity-50"></i>
+                            <p class="text-xs">No EDC XML loaded yet. Upload your clinical data file on the left.</p>
+                        </div>
+                    </template>
                 </div>
             </div>
 
-            <!-- Metadata & Item Explorer Table -->
-            <div class="bg-slate-950 border border-slate-800 rounded-xl p-6">
-                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
+            <!-- Ingested Metadata Table -->
+            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6 shadow-sm">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
                     <div>
-                        <h3 class="text-sm font-bold text-white flex items-center gap-2">
-                            <i data-lucide="list-tree" class="w-4 h-4 text-indigo-400"></i>
-                            <span>CRF Metadata Dictionary & Item Profiling</span>
+                        <h3 class="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                            <i data-lucide="layers" class="w-4 h-4 text-blue-600 dark:text-blue-400"></i>
+                            <span>CRF Data Dictionary &amp; Item Definitions</span>
                         </h3>
-                        <p class="text-xs text-slate-400">Inspecting captured variables, questions, item OIDs, and sample values from the XML.</p>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">Parsed forms, item groups, questions, data types, and code lists.</p>
                     </div>
 
-                    <!-- Search Box -->
-                    <div class="w-full sm:w-72">
-                        <input type="text" x-model="metaSearch" @input.debounce.300ms="fetchMetadata()" placeholder="Search FormOID, ItemOID, Question..." class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-blue-500">
+                    <div class="flex items-center gap-2 w-full sm:w-auto">
+                        <input type="text" x-model="metaSearch" @input.debounce.300ms="fetchMetadata()" placeholder="Search ItemOID, Form, or Question..." class="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 text-xs px-3 py-1.5 rounded-lg focus:outline-none focus:border-blue-500 w-full sm:w-64">
                     </div>
                 </div>
 
-                <!-- Table -->
-                <div class="overflow-x-auto border border-slate-800 rounded-lg">
-                    <table class="min-w-full divide-y divide-slate-800 text-xs text-left">
-                        <thead class="bg-slate-900 text-slate-300 font-semibold uppercase text-[10px] tracking-wider">
+                <div class="overflow-x-auto border border-slate-200 dark:border-slate-800 rounded-lg">
+                    <table class="min-w-full divide-y divide-slate-200 dark:divide-slate-800 text-xs text-left">
+                        <thead class="bg-slate-50 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 font-semibold uppercase text-[10px] tracking-wider">
                             <tr>
-                                <th class="px-3 py-2.5">Form OID</th>
-                                <th class="px-3 py-2.5">Item Group</th>
-                                <th class="px-3 py-2.5">Item OID</th>
-                                <th class="px-3 py-2.5">Item Name</th>
-                                <th class="px-3 py-2.5">CRF Question / Label</th>
-                                <th class="px-3 py-2.5">Sample Observed Values</th>
+                                <th class="px-4 py-2.5">Form OID</th>
+                                <th class="px-4 py-2.5">Item Group</th>
+                                <th class="px-4 py-2.5">Item OID</th>
+                                <th class="px-4 py-2.5">Question / Label</th>
+                                <th class="px-4 py-2.5">Data Type</th>
+                                <th class="px-4 py-2.5">CodeList / Units</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-slate-800/60 bg-slate-950 font-mono">
-                            <template x-for="item in metadataRows" :key="item.FormOID + item.ItemOID">
-                                <tr class="hover:bg-slate-900/50 transition">
-                                    <td class="px-3 py-2 text-cyan-400" x-text="item.FormOID"></td>
-                                    <td class="px-3 py-2 text-slate-400" x-text="item.ItemGroupOID"></td>
-                                    <td class="px-3 py-2 text-blue-400 font-semibold" x-text="item.ItemOID"></td>
-                                    <td class="px-3 py-2 text-slate-300 font-sans" x-text="item.ItemName"></td>
-                                    <td class="px-3 py-2 text-slate-300 font-sans max-w-xs truncate" x-text="item.Question"></td>
-                                    <td class="px-3 py-2 text-amber-300/90 text-[11px]" x-text="item.SampleValues"></td>
+                        <tbody class="divide-y divide-slate-100 dark:divide-slate-800/60 bg-white dark:bg-slate-900 font-mono">
+                            <template x-for="row in metadataRows" :key="row.ItemOID">
+                                <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition">
+                                    <td class="px-4 py-2 text-slate-600 dark:text-slate-300" x-text="row.FormOID"></td>
+                                    <td class="px-4 py-2 text-slate-500 dark:text-slate-400" x-text="row.ItemGroupOID"></td>
+                                    <td class="px-4 py-2 font-bold text-blue-600 dark:text-blue-400" x-text="row.ItemOID"></td>
+                                    <td class="px-4 py-2 font-sans text-slate-900 dark:text-white" x-text="row.ItemName || row.Question || row.ItemOID"></td>
+                                    <td class="px-4 py-2 text-slate-500 dark:text-slate-400" x-text="row.DataType || 'text'"></td>
+                                    <td class="px-4 py-2 text-slate-400 dark:text-slate-500 text-[11px]" x-text="row.CodeListOID || '-'"></td>
                                 </tr>
                             </template>
                             <template x-if="metadataRows.length === 0">
                                 <tr>
-                                    <td colspan="6" class="px-4 py-8 text-center text-slate-500 font-sans">No XML data loaded yet. Please upload an EDC ODM XML file above.</td>
+                                    <td colspan="6" class="px-4 py-8 text-center text-slate-400 dark:text-slate-500 font-sans">No metadata loaded. Upload an XML file above.</td>
                                 </tr>
                             </template>
                         </tbody>
                     </table>
                 </div>
 
-                <!-- Pagination Controls -->
-                <div class="flex justify-between items-center mt-3 text-xs text-slate-400">
-                    <span x-text="`Showing ${metadataRows.length} of ${metaTotal} items (Page ${metaPage})`"></span>
-                    <div class="flex gap-2">
-                        <button @click="metaPage--; fetchMetadata()" :disabled="metaPage <= 1" class="px-2.5 py-1 bg-slate-900 hover:bg-slate-800 border border-slate-700 rounded disabled:opacity-40">Previous</button>
-                        <button @click="metaPage++; fetchMetadata()" :disabled="metaPage * metaPageSize >= metaTotal" class="px-2.5 py-1 bg-slate-900 hover:bg-slate-800 border border-slate-700 rounded disabled:opacity-40">Next</button>
+                <!-- Pagination -->
+                <div class="flex justify-between items-center mt-3 text-xs text-slate-500 dark:text-slate-400">
+                    <span x-text="`Showing ${(metaPage - 1) * metaPageSize + 1} to ${Math.min(metaPage * metaPageSize, metaTotal)} of ${metaTotal.toLocaleString()} items`"></span>
+                    <div class="space-x-1">
+                        <button @click="metaPage--; fetchMetadata()" :disabled="metaPage <= 1" class="px-2.5 py-1 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded disabled:opacity-40 transition">Prev</button>
+                        <button @click="metaPage++; fetchMetadata()" :disabled="metaPage * metaPageSize >= metaTotal" class="px-2.5 py-1 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded disabled:opacity-40 transition">Next</button>
                     </div>
                 </div>
             </div>
         </div>
 
 
-        <!-- ================= TAB 2: AI YAMAA SPECIFICATION STUDIO ================= -->
+        <!-- ================= TAB 2: AI YAMAA SCHEMA STUDIO ================= -->
         <div x-show="activeTab === 'specs'" x-cloak class="space-y-6">
 
-            <!-- AI Schema Generation Hero Card -->
-            <div class="bg-gradient-to-r from-indigo-950 via-slate-950 to-blue-950 border border-indigo-500/30 rounded-xl p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                <div>
-                    <div class="flex items-center gap-2">
-                        <h2 class="text-sm font-bold text-white flex items-center gap-2">
-                            <i data-lucide="sparkles" class="w-4 h-4 text-amber-400"></i>
-                            <span>AI SDTM Schema Synthesizer</span>
+            <!-- CRF Form Explorer & SDTM Domain Mapping Matrix -->
+            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 shadow-sm">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4 pb-3 border-b border-slate-100 dark:border-slate-800">
+                    <div>
+                        <h2 class="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                            <i data-lucide="layout-grid" class="w-4 h-4 text-blue-600 dark:text-blue-400"></i>
+                            <span>CRF Form Explorer &amp; SDTM Domain Mapping Matrix</span>
                         </h2>
-                        <span class="text-[10px] px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/40 font-mono" x-text="`Provider: ${getProviderLabel()}`"></span>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">Discovered CRF Forms in your EDC dataset. Select forms and customize target SDTM domains.</p>
                     </div>
-                    <p class="text-xs text-slate-300 mt-1">Scans the uploaded EDC XML variables and auto-generates complete, valid Yamaa YAML schemas (DM, AE, VS, LB, EX, DS, MH).</p>
+
+                    <div class="flex items-center gap-2">
+                        <button @click="generateFromSelectedForms()" :disabled="aiGenerating || crfForms.length === 0" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs px-3.5 py-2 rounded-lg flex items-center gap-1.5 transition disabled:opacity-40 shadow-sm">
+                            <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+                            <span x-text="aiGenerating ? 'Synthesizing...' : 'Generate Specs for Selected Forms'"></span>
+                        </button>
+                    </div>
                 </div>
 
-                <div class="flex items-center gap-2.5">
-                    <button @click="showSettingsModal = true" class="bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-300 text-xs px-3 py-2 rounded-lg font-medium flex items-center gap-1.5 transition">
-                        <i data-lucide="key-round" class="w-3.5 h-3.5 text-amber-400"></i>
-                        <span>AI Keys / Provider</span>
-                    </button>
-                    <button @click="triggerAIDiscovery()" :disabled="aiGenerating || !studyStats.total_records" class="bg-gradient-to-r from-indigo-600 via-purple-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white text-xs px-4 py-2 rounded-lg font-bold flex items-center gap-2 shadow-lg shadow-indigo-600/30 disabled:opacity-40 transition">
-                        <i data-lucide="sparkles" class="w-3.5 h-3.5" :class="aiGenerating ? 'animate-spin' : ''"></i>
-                        <span x-text="aiGenerating ? 'AI Synthesizing Schemas...' : '✨ AI Auto-Generate Schemas from XML'"></span>
-                    </button>
+                <div class="overflow-x-auto border border-slate-200 dark:border-slate-800 rounded-lg">
+                    <table class="min-w-full divide-y divide-slate-200 dark:divide-slate-800 text-xs text-left">
+                        <thead class="bg-slate-50 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 font-semibold uppercase text-[10px] tracking-wider">
+                            <tr>
+                                <th class="px-3 py-2 text-center w-10">
+                                    <input type="checkbox" @change="toggleAllForms($event.target.checked)" checked class="rounded border-slate-300 dark:border-slate-700 text-blue-600 focus:ring-0">
+                                </th>
+                                <th class="px-3 py-2">Form OID</th>
+                                <th class="px-3 py-2">Form Description / Label</th>
+                                <th class="px-3 py-2 text-center">Items</th>
+                                <th class="px-3 py-2 text-center">Records</th>
+                                <th class="px-3 py-2">Target SDTM Domain</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100 dark:divide-slate-800/60 bg-white dark:bg-slate-900 font-sans">
+                            <template x-for="form in crfForms" :key="form.FormOID">
+                                <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition">
+                                    <td class="px-3 py-2 text-center">
+                                        <input type="checkbox" x-model="selectedForms[form.FormOID]" class="rounded border-slate-300 dark:border-slate-700 text-blue-600 focus:ring-0">
+                                    </td>
+                                    <td class="px-3 py-2 font-mono font-bold text-slate-700 dark:text-slate-300" x-text="form.FormOID"></td>
+                                    <td class="px-3 py-2 text-slate-900 dark:text-white font-medium" x-text="form.FormName"></td>
+                                    <td class="px-3 py-2 text-center font-mono text-slate-600 dark:text-slate-300" x-text="form.ItemCount"></td>
+                                    <td class="px-3 py-2 text-center font-mono text-slate-600 dark:text-slate-300" x-text="form.TotalRecords.toLocaleString()"></td>
+                                    <td class="px-3 py-2">
+                                        <select x-model="formMappings[form.FormOID]" class="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 text-xs px-2.5 py-1 rounded-md focus:outline-none focus:border-blue-500 font-mono font-bold">
+                                            <option value="DM">DM - Demographics</option>
+                                            <option value="VS">VS - Vital Signs</option>
+                                            <option value="LB">LB - Laboratory Tests</option>
+                                            <option value="AE">AE - Adverse Events</option>
+                                            <option value="EX">EX - Exposure</option>
+                                            <option value="DS">DS - Disposition</option>
+                                            <option value="MH">MH - Medical History</option>
+                                            <option value="RS">RS - Response</option>
+                                            <option value="RP">RP - Reproductive System</option>
+                                            <option value="CM">CM - Concomitant Medications</option>
+                                            <option value="PE">PE - Physical Examination</option>
+                                            <option value="QS">QS - Questionnaires</option>
+                                            <option value="EG">EG - ECG Test Results</option>
+                                            <option value="SUPPDM">SUPPDM - Supplemental DM</option>
+                                            <option value="SUPPEX">SUPPEX - Supplemental EX</option>
+                                            <option value="SUPPMH">SUPPMH - Supplemental MH</option>
+                                        </select>
+                                    </td>
+                                </tr>
+                            </template>
+                            <template x-if="crfForms.length === 0">
+                                <tr>
+                                    <td colspan="6" class="px-4 py-6 text-center text-slate-400 dark:text-slate-500">No CRF forms loaded. Ingest an ODM XML in Step 1 to explore study forms.</td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
                 </div>
             </div>
 
-            <!-- Main Studio Grid -->
-            <div class="space-y-4">
-
-                <!-- CRF Form Explorer & Domain Mapper (Interactive Form-Level Matrix) -->
-                <div class="bg-slate-950 border border-indigo-500/30 rounded-xl p-4 space-y-3">
-                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pb-2 border-b border-slate-800">
-                        <div class="flex items-center gap-2">
-                            <i data-lucide="layers" class="w-4 h-4 text-indigo-400"></i>
-                            <h3 class="text-xs font-bold text-white uppercase tracking-wider">CRF Form Explorer &amp; SDTM Domain Mapping Matrix</h3>
-                            <span class="text-[10px] bg-indigo-500/20 text-indigo-300 px-2 py-0.5 rounded font-mono" x-text="`${crfForms.length} CRF Forms Discovered`"></span>
-                        </div>
-
-                        <div class="flex items-center gap-2">
-                            <button @click="fetchCRFForms()" class="bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-300 text-[11px] px-3 py-1.5 rounded-lg flex items-center gap-1">
-                                <i data-lucide="refresh-cw" class="w-3 h-3"></i>
-                                <span>Refresh Forms</span>
-                            </button>
-                            <button @click="generateFromSelectedForms()" :disabled="aiGenerating || crfForms.length === 0" class="bg-indigo-600 hover:bg-indigo-500 text-white text-[11px] px-3.5 py-1.5 rounded-lg font-bold flex items-center gap-1.5 shadow-lg shadow-indigo-600/30 disabled:opacity-40 transition">
-                                <i data-lucide="sparkles" class="w-3.5 h-3.5" :class="aiGenerating ? 'animate-spin' : ''"></i>
-                                <span>✨ Generate Specs for Selected Forms</span>
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Forms Table -->
-                    <div class="overflow-x-auto max-h-60 overflow-y-auto border border-slate-800/80 rounded-lg">
-                        <table class="w-full text-left text-xs text-slate-300">
-                            <thead class="bg-slate-900 text-slate-400 text-[10px] uppercase font-mono sticky top-0">
-                                <tr>
-                                    <th class="px-3 py-2 text-center w-10">
-                                        <input type="checkbox" @change="toggleAllForms($event.target.checked)" class="rounded bg-slate-950 border-slate-700 text-indigo-600 focus:ring-0">
-                                    </th>
-                                    <th class="px-3 py-2">CRF Form OID</th>
-                                    <th class="px-3 py-2">Form Label / Purpose</th>
-                                    <th class="px-3 py-2 text-center">Items</th>
-                                    <th class="px-3 py-2 text-center">Records</th>
-                                    <th class="px-3 py-2 text-center">Subjects</th>
-                                    <th class="px-3 py-2">Target SDTM Domain</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-slate-800/60 bg-slate-950/60 font-mono">
-                                <template x-for="f in crfForms" :key="f.FormOID">
-                                    <tr class="hover:bg-slate-900/40 transition">
-                                        <td class="px-3 py-2 text-center">
-                                            <input type="checkbox" x-model="selectedForms[f.FormOID]" class="rounded bg-slate-950 border-slate-700 text-indigo-600 focus:ring-0">
-                                        </td>
-                                        <td class="px-3 py-2 text-cyan-400 font-semibold text-[11px]" x-text="f.FormOID"></td>
-                                        <td class="px-3 py-2 text-slate-300 font-sans" x-text="f.FormName"></td>
-                                        <td class="px-3 py-2 text-center text-slate-400" x-text="f.ItemCount"></td>
-                                        <td class="px-3 py-2 text-center text-slate-400" x-text="f.TotalRecords"></td>
-                                        <td class="px-3 py-2 text-center text-slate-400" x-text="f.SubjectCount"></td>
-                                        <td class="px-3 py-2">
-                                            <select x-model="formMappings[f.FormOID]" class="bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-white focus:outline-none focus:border-indigo-500 font-mono">
-                                                <option value="DM">DM (Demographics)</option>
-                                                <option value="VS">VS (Vital Signs)</option>
-                                                <option value="LB">LB (Laboratory)</option>
-                                                <option value="AE">AE (Adverse Events)</option>
-                                                <option value="EX">EX (Exposure / Dosing)</option>
-                                                <option value="DS">DS (Disposition)</option>
-                                                <option value="MH">MH (Medical History)</option>
-                                                <option value="RS">RS (Disease Response / Skin)</option>
-                                                <option value="RP">RP (Reproductive System)</option>
-                                                <option value="CM">CM (Concomitant Meds)</option>
-                                                <option value="PE">PE (Physical Exam)</option>
-                                                <option value="QS">QS (Questionnaires)</option>
-                                                <option value="EG">EG (ECG)</option>
-                                                <option value="MB">MB (Microbiology)</option>
-                                                <option value="SUPPDM">SUPPDM (Supp Demographics)</option>
-                                                <option value="SUPPEX">SUPPEX (Supp Exposure)</option>
-                                            </select>
-                                        </td>
-                                    </tr>
-                                </template>
-                                <template x-if="crfForms.length === 0">
-                                    <tr>
-                                        <td colspan="7" class="px-4 py-6 text-center text-slate-500 font-sans">
-                                            Upload an EDC ODM XML file in Step 1 to explore study CRF forms.
-                                        </td>
-                                    </tr>
-                                </template>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- Main Studio Grid -->
-                <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
-                    <!-- Left Sidebar: Domain Spec Selector -->
-                    <div class="bg-slate-950 border border-slate-800 rounded-xl p-4 flex flex-col h-[600px]">
-                    <div class="flex justify-between items-center mb-3">
-                        <h3 class="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-1.5">
-                            <i data-lucide="folder" class="w-3.5 h-3.5 text-blue-400"></i>
-                            <span>Domain Specs</span>
-                        </h3>
-                        <div class="flex items-center gap-1">
-                            <label class="bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-300 text-[10px] px-2 py-0.5 rounded cursor-pointer transition">
-                                <span>Upload .yaml</span>
-                                <input type="file" accept=".yaml,.yml" multiple class="hidden" @change="uploadSpecFiles($event)">
+            <!-- Workspace: Sidebar & YAML Studio -->
+            <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                <!-- Left Sidebar: Domain Spec Selector -->
+                <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 flex flex-col justify-between shadow-sm h-[650px]">
+                    <div class="flex-1 flex flex-col min-h-0">
+                        <div class="flex justify-between items-center mb-3">
+                            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">SDTM Specs</h3>
+                            <label class="cursor-pointer text-xs text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1">
+                                <i data-lucide="folder-up" class="w-3.5 h-3.5"></i>
+                                <span>Upload</span>
+                                <input type="file" multiple accept=".yaml,.yml" class="hidden" @change="uploadSpecFiles($event)">
                             </label>
-                            <span class="text-[10px] bg-blue-500/20 text-blue-300 px-1.5 py-0.5 rounded font-mono" x-text="specsList.length"></span>
+                        </div>
+
+                        <!-- Domains List -->
+                        <div class="flex-1 overflow-y-auto space-y-1 pr-1">
+                            <template x-for="spec in specsList" :key="spec.domain">
+                                <button @click="selectSpec(spec.domain)" :class="selectedDomain === spec.domain ? 'bg-blue-50 dark:bg-slate-800 border-blue-500 dark:border-blue-500 text-blue-700 dark:text-blue-300 font-bold' : 'border-transparent text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50'" class="w-full text-left px-3 py-2 rounded-lg border text-xs flex items-center justify-between transition">
+                                    <div class="flex items-center gap-2">
+                                        <span class="w-2 h-2 rounded-full" :class="spec.is_ref ? 'bg-slate-400' : 'bg-blue-500'"></span>
+                                        <span x-text="spec.domain + '.yaml'"></span>
+                                    </div>
+                                    <span class="text-[10px] text-slate-400" x-text="spec.type || 'Custom'"></span>
+                                </button>
+                            </template>
                         </div>
                     </div>
 
-                    <div class="flex-1 overflow-y-auto space-y-1 pr-1">
-                        <template x-for="s in specsList" :key="s.domain">
-                            <button @click="selectSpec(s.domain)" :class="selectedDomain === s.domain ? 'bg-blue-600 text-white font-semibold' : 'bg-slate-900 text-slate-300 hover:bg-slate-800'" class="w-full px-3 py-2 rounded-lg text-xs flex items-center justify-between transition text-left">
-                                <div class="flex items-center gap-2">
-                                    <span class="font-mono font-bold" x-text="s.domain"></span>
-                                    <span x-show="s.is_ref" class="text-[10px] text-slate-400 font-sans">(Ref)</span>
-                                </div>
-                                <span class="text-[9px] px-1.5 py-0.5 rounded font-mono uppercase" :class="s.type === 'FINDINGS' ? 'bg-purple-900/60 text-purple-300' : 'bg-slate-800 text-slate-400'" x-text="s.type"></span>
-                            </button>
-                        </template>
-                        <template x-if="specsList.length === 0">
-                            <div class="p-4 text-center text-xs text-slate-500 font-sans">
-                                No specs yet. Click <span class="text-indigo-400 font-semibold">"✨ AI Auto-Generate"</span> above, choose a template below, or upload YAML files.
-                            </div>
-                        </template>
-                    </div>
-
-                    <div class="pt-3 mt-2 border-t border-slate-800 space-y-2">
-                        <div class="text-[11px] text-slate-400 font-semibold">Yamaa Schema Scaffolding:</div>
+                    <!-- Built-in Templates -->
+                    <div class="pt-3 border-t border-slate-100 dark:border-slate-800 mt-2">
+                        <div class="text-[10px] font-semibold uppercase text-slate-400 mb-2">Built-in Templates</div>
                         <div class="grid grid-cols-2 gap-1.5">
-                            <button @click="insertTemplate('FINDINGS')" class="bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-200 text-[11px] py-1.5 rounded font-medium text-center">Findings (LB/VS)</button>
-                            <button @click="insertTemplate('EVENTS')" class="bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-200 text-[11px] py-1.5 rounded font-medium text-center">Events (AE/MH)</button>
-                            <button @click="insertTemplate('DM')" class="bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-200 text-[11px] py-1.5 rounded font-medium text-center">Demographics (DM)</button>
-                            <button @click="insertTemplate('CODING')" class="bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-200 text-[11px] py-1.5 rounded font-medium text-center">MedDRA Coding</button>
+                            <button @click="insertTemplate('DM')" class="px-2 py-1 text-[11px] bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded text-center transition">DM</button>
+                            <button @click="insertTemplate('VS')" class="px-2 py-1 text-[11px] bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded text-center transition">VS</button>
+                            <button @click="insertTemplate('LB')" class="px-2 py-1 text-[11px] bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded text-center transition">LB</button>
+                            <button @click="insertTemplate('AE')" class="px-2 py-1 text-[11px] bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded text-center transition">AE</button>
                         </div>
                     </div>
                 </div>
 
                 <!-- Center/Right: YAML Editor & Validator -->
-                <div class="lg:col-span-3 bg-slate-950 border border-slate-800 rounded-xl p-4 flex flex-col h-[650px]">
-                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center pb-3 border-b border-slate-800 mb-3 gap-2">
+                <div class="lg:col-span-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 flex flex-col h-[650px] shadow-sm">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center pb-3 border-b border-slate-100 dark:border-slate-800 mb-3 gap-2">
                         <div class="flex items-center gap-3">
-                            <div class="font-mono font-bold text-sm text-cyan-400 flex items-center gap-1.5">
-                                <i data-lucide="file-code" class="w-4 h-4 text-cyan-400"></i>
+                            <div class="font-mono font-bold text-sm text-slate-900 dark:text-white flex items-center gap-1.5">
+                                <i data-lucide="file-code" class="w-4 h-4 text-blue-600 dark:text-blue-400"></i>
                                 <span x-text="selectedDomain ? selectedDomain + '.yaml' : 'No Domain Selected'"></span>
                             </div>
                             
-                            <!-- Prominent Validation Status Badge -->
+                            <!-- Clean Validation Status Badge -->
                             <template x-if="selectedDomain && schemaValidation.is_valid">
-                                <span class="inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/50 shadow-sm shadow-emerald-500/20">
-                                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                                    <span>✓ Valid Yamaa Schema</span>
+                                <span class="inline-flex items-center gap-1.5 text-xs px-2.5 py-0.5 rounded-full font-medium bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                                    <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                                    <span>Valid Yamaa Schema</span>
                                 </span>
                             </template>
                             <template x-if="selectedDomain && !schemaValidation.is_valid">
-                                <span class="inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full font-bold bg-red-500/20 text-red-300 border border-red-500/50 shadow-sm shadow-red-500/20">
-                                    <span class="w-2 h-2 rounded-full bg-red-500 animate-ping"></span>
-                                    <span>⚠️ Schema Errors Detected</span>
+                                <span class="inline-flex items-center gap-1.5 text-xs px-2.5 py-0.5 rounded-full font-medium bg-red-50 dark:bg-red-950/60 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-800">
+                                    <span class="w-2 h-2 rounded-full bg-red-500"></span>
+                                    <span>Schema Errors Detected</span>
                                 </span>
                             </template>
                         </div>
 
                         <div class="flex items-center gap-2">
-                            <button @click="validateCurrentYaml()" class="bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-300 text-xs px-3 py-1.5 rounded-lg font-medium flex items-center gap-1 transition">
-                                <i data-lucide="shield-check" class="w-3.5 h-3.5 text-emerald-400"></i>
-                                <span>Validate Now</span>
+                            <button @click="validateCurrentYaml()" class="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-xs px-3 py-1.5 rounded-lg font-medium flex items-center gap-1 transition">
+                                <i data-lucide="shield-check" class="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400"></i>
+                                <span>Validate</span>
                             </button>
-                            <button @click="aiRegenerateSingleDomain()" :disabled="!selectedDomain || aiGenerating" class="bg-indigo-600/30 hover:bg-indigo-600/40 border border-indigo-500/40 text-indigo-300 text-xs px-3 py-1.5 rounded-lg font-semibold flex items-center gap-1.5 transition">
-                                <i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-400"></i>
+                            <button @click="aiRegenerateSingleDomain()" :disabled="!selectedDomain || aiGenerating" class="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-xs px-3 py-1.5 rounded-lg font-medium flex items-center gap-1.5 transition">
+                                <i data-lucide="sparkles" class="w-3.5 h-3.5 text-blue-600 dark:text-blue-400"></i>
                                 <span>AI Re-Synthesize</span>
                             </button>
-                            <button @click="saveSpec()" :disabled="!selectedDomain || savingSpec" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-3.5 py-1.5 rounded-lg font-semibold flex items-center gap-1.5 shadow-lg shadow-emerald-600/20 disabled:opacity-40 transition">
+                            <button @click="saveSpec()" :disabled="!selectedDomain || savingSpec" class="bg-blue-600 hover:bg-blue-700 text-white text-xs px-3.5 py-1.5 rounded-lg font-semibold flex items-center gap-1.5 shadow-sm disabled:opacity-40 transition">
                                 <i data-lucide="save" class="w-3.5 h-3.5"></i>
-                                <span x-text="savingSpec ? 'Saving...' : 'Save Specification'"></span>
+                                <span x-text="savingSpec ? 'Saving...' : 'Save Spec'"></span>
                             </button>
                         </div>
                     </div>
 
                     <!-- Error Diagnostic Banner with Auto-Fix Action -->
                     <template x-if="selectedDomain && !schemaValidation.is_valid && schemaValidation.errors.length > 0">
-                        <div class="mb-3 bg-red-950/80 border border-red-500/60 rounded-xl p-3.5 text-xs text-red-200 shadow-lg shadow-red-950/50">
-                            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-2 pb-2 border-b border-red-800/60">
-                                <div class="font-bold flex items-center gap-2 text-red-200">
-                                    <i data-lucide="alert-octagon" class="w-4 h-4 text-red-400"></i>
-                                    <span x-text="`${schemaValidation.errors.length} Schema Issue(s) Detected in ${selectedDomain}.yaml:`"></span>
+                        <div class="mb-3 bg-red-50 dark:bg-red-950/60 border border-red-200 dark:border-red-800 rounded-lg p-3 text-xs text-red-800 dark:text-red-200">
+                            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-2 pb-2 border-b border-red-200 dark:border-red-800/60">
+                                <div class="font-bold flex items-center gap-2">
+                                    <i data-lucide="alert-circle" class="w-4 h-4 text-red-600 dark:text-red-400"></i>
+                                    <span x-text="`${schemaValidation.errors.length} Schema Issue(s) Detected:`"></span>
                                 </div>
-                                <button @click="autoFixCurrentYaml()" :disabled="fixingSpec" class="bg-gradient-to-r from-red-600 to-amber-600 hover:from-red-500 hover:to-amber-500 text-white font-bold text-xs px-3 py-1.5 rounded-lg flex items-center gap-1.5 shadow-md transition disabled:opacity-50">
-                                    <i data-lucide="wrench" class="w-3.5 h-3.5 text-amber-200"></i>
-                                    <span x-text="fixingSpec ? 'Repairing Schema...' : '🛠️ Auto-Fix Schema Issues'"></span>
+                                <button @click="autoFixCurrentYaml()" :disabled="fixingSpec" class="bg-red-600 hover:bg-red-700 text-white font-semibold text-xs px-3 py-1 rounded-md flex items-center gap-1.5 transition disabled:opacity-50">
+                                    <i data-lucide="wrench" class="w-3.5 h-3.5"></i>
+                                    <span x-text="fixingSpec ? 'Repairing...' : 'Auto-Fix Schema Issues'"></span>
                                 </button>
                             </div>
-                            <ul class="list-disc list-inside space-y-1 text-[11px] text-red-200 font-mono">
+                            <ul class="list-disc list-inside space-y-1 text-[11px] font-mono">
                                 <template x-for="(err, idx) in schemaValidation.errors" :key="idx">
-                                    <li class="bg-red-900/30 px-2 py-1 rounded border border-red-800/40" x-text="err"></li>
+                                    <li x-text="err"></li>
                                 </template>
                             </ul>
                         </div>
@@ -452,21 +448,21 @@
 
                     <!-- Code Editor Area -->
                     <div class="flex-1 relative">
-                        <textarea x-model="activeYamlContent" class="w-full h-full bg-slate-900 text-slate-100 p-4 rounded-lg font-mono text-xs leading-relaxed border border-slate-800 focus:outline-none focus:border-blue-500 resize-none code-editor" spellcheck="false" placeholder="# Click '✨ AI Auto-Generate' above, pick a template on the left, or upload YAML files to begin authoring"></textarea>
+                        <textarea x-model="activeYamlContent" class="w-full h-full bg-slate-900 text-slate-100 p-4 rounded-lg font-mono text-xs leading-relaxed border border-slate-800 focus:outline-none focus:border-blue-500 resize-none code-editor" spellcheck="false" placeholder="# Select a domain on the left or generate specs above"></textarea>
                     </div>
 
                     <!-- Footer Status with Real-Time Schema Validator -->
-                    <div class="pt-2.5 mt-2 border-t border-slate-800/80 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 text-[11px]">
+                    <div class="pt-2.5 mt-2 border-t border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 text-[11px]">
                         <div class="flex items-center gap-2">
                             <template x-if="schemaValidation.is_valid">
-                                <span class="inline-flex items-center gap-1.5 text-emerald-400 bg-emerald-950/40 border border-emerald-500/40 px-2.5 py-1 rounded font-medium">
-                                    <i data-lucide="check-circle-2" class="w-3.5 h-3.5 text-emerald-400"></i>
-                                    <span>Yamaa v1.0 Specification Validated &amp; Ready for Build</span>
+                                <span class="inline-flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-medium">
+                                    <i data-lucide="check-circle-2" class="w-3.5 h-3.5"></i>
+                                    <span>Yamaa Specification Validated &amp; Ready for Pipeline</span>
                                 </span>
                             </template>
                             <template x-if="schemaValidation.warnings.length > 0">
-                                <span class="inline-flex items-center gap-1 text-amber-400 bg-amber-950/40 border border-amber-500/30 px-2 py-0.5 rounded font-medium" :title="schemaValidation.warnings.join('\n')">
-                                    <i data-lucide="alert-triangle" class="w-3 h-3 text-amber-400"></i>
+                                <span class="inline-flex items-center gap-1 text-amber-600 dark:text-amber-400 font-medium" :title="schemaValidation.warnings.join('\n')">
+                                    <i data-lucide="alert-triangle" class="w-3 h-3"></i>
                                     <span x-text="`${schemaValidation.warnings.length} CDISC Recommendation(s)`"></span>
                                 </span>
                             </template>
@@ -476,64 +472,53 @@
                 </div>
             </div>
         </div>
-    </div>
 
 
         <!-- ================= TAB 3: BUILD PIPELINE & RUNNER ================= -->
         <div x-show="activeTab === 'pipeline'" x-cloak class="space-y-6">
             <!-- Execution Control Bar -->
-            <div class="bg-slate-950 border border-slate-800 rounded-xl p-6">
+            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6 shadow-sm">
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
                     <div>
-                        <h2 class="text-sm font-bold text-white flex items-center gap-2">
-                            <i data-lucide="play" class="w-4 h-4 text-emerald-400"></i>
-                            <span>SDTM Multi-Domain Build Orchestration</span>
+                        <h2 class="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                            <i data-lucide="play-circle" class="w-4 h-4 text-blue-600 dark:text-blue-400"></i>
+                            <span>SDTM Transformation Pipeline</span>
                         </h2>
-                        <p class="text-xs text-slate-400">Executes topological dependency resolution, cross-domain referencing, sequence numbering, and derivations using Polars.</p>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">Executes column derivations, SQL row slices, cross-domain references, and conformance checks with Polars.</p>
                     </div>
 
                     <div class="flex items-center gap-3">
-                        <div class="flex items-center gap-2 bg-slate-900 border border-slate-800 px-3 py-1.5 rounded-lg text-xs">
-                            <label class="flex items-center gap-1.5 cursor-pointer text-slate-300">
-                                <input type="checkbox" checked disabled class="rounded border-slate-700 text-blue-500">
-                                <span>CSV</span>
-                            </label>
-                            <label class="flex items-center gap-1.5 cursor-pointer text-slate-300">
-                                <input type="checkbox" checked disabled class="rounded border-slate-700 text-blue-500">
-                                <span>Parquet</span>
-                            </label>
-                            <label class="flex items-center gap-1.5 cursor-pointer text-slate-300">
-                                <input type="checkbox" checked disabled class="rounded border-slate-700 text-blue-500">
-                                <span>SAS XPT</span>
-                            </label>
-                        </div>
-
-                        <button @click="runPipeline()" :disabled="pipelineRunning" class="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs px-5 py-2.5 rounded-lg font-bold flex items-center gap-2 shadow-lg shadow-blue-600/30 disabled:opacity-50 transition">
-                            <i data-lucide="cpu" class="w-4 h-4" :class="pipelineRunning ? 'animate-spin' : ''"></i>
-                            <span x-text="pipelineRunning ? 'Executing Build Pipeline...' : 'Run SDTM Build Pipeline'"></span>
+                        <button @click="runPipeline()" :disabled="pipelineRunning || specsList.length === 0" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs px-4 py-2 rounded-lg flex items-center gap-2 transition disabled:opacity-40 shadow-sm">
+                            <i data-lucide="play" class="w-4 h-4"></i>
+                            <span x-text="pipelineRunning ? 'Building Datasets...' : 'Run SDTM Build Pipeline'"></span>
                         </button>
                     </div>
                 </div>
 
-                <!-- Info message if no data -->
-                <template x-if="!studyStats.total_records">
-                    <div class="bg-amber-500/10 border border-amber-500/30 text-amber-300 rounded-lg p-3 text-xs flex items-center gap-2">
-                        <i data-lucide="alert-triangle" class="w-4 h-4"></i>
-                        <span>Please upload an EDC ODM XML file in Tab 1 before running the pipeline.</span>
-                    </div>
-                </template>
+                <!-- Execution Progress Logs -->
+                <div class="bg-slate-900 text-slate-200 rounded-lg p-4 font-mono text-xs h-36 overflow-y-auto space-y-1 border border-slate-800">
+                    <template x-for="(log, idx) in pipelineLogs" :key="idx">
+                        <div class="flex items-center gap-2">
+                            <span class="text-slate-500">›</span>
+                            <span x-text="log"></span>
+                        </div>
+                    </template>
+                    <template x-if="pipelineLogs.length === 0">
+                        <div class="text-slate-500">Pipeline ready. Click 'Run SDTM Build Pipeline' to start generation.</div>
+                    </template>
+                </div>
             </div>
 
-            <!-- Domain Results Table -->
-            <div class="bg-slate-950 border border-slate-800 rounded-xl p-6">
-                <h3 class="text-sm font-bold text-white flex items-center gap-2 mb-4">
-                    <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-400"></i>
-                    <span>Generated SDTM Domains &amp; Quality Status</span>
+            <!-- Built Domains Summary Table -->
+            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6 shadow-sm">
+                <h3 class="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2 mb-4">
+                    <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-600 dark:text-emerald-400"></i>
+                    <span>Generated SDTM Domains</span>
                 </h3>
 
-                <div class="overflow-x-auto border border-slate-800 rounded-lg">
-                    <table class="min-w-full divide-y divide-slate-800 text-xs text-left">
-                        <thead class="bg-slate-900 text-slate-300 font-semibold uppercase text-[10px] tracking-wider">
+                <div class="overflow-x-auto border border-slate-200 dark:border-slate-800 rounded-lg">
+                    <table class="min-w-full divide-y divide-slate-200 dark:divide-slate-800 text-xs text-left">
+                        <thead class="bg-slate-50 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 font-semibold uppercase text-[10px] tracking-wider">
                             <tr>
                                 <th class="px-4 py-2.5">Domain</th>
                                 <th class="px-4 py-2.5">Status</th>
@@ -543,31 +528,31 @@
                                 <th class="px-4 py-2.5 text-right">Actions</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-slate-800/60 bg-slate-950 font-mono">
+                        <tbody class="divide-y divide-slate-100 dark:divide-slate-800/60 bg-white dark:bg-slate-900 font-mono">
                             <template x-for="res in pipelineResults" :key="res.domain">
-                                <tr class="hover:bg-slate-900/50 transition">
-                                    <td class="px-4 py-2.5 font-bold text-cyan-400" x-text="res.domain"></td>
+                                <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition">
+                                    <td class="px-4 py-2.5 font-bold text-blue-600 dark:text-blue-400" x-text="res.domain"></td>
                                     <td class="px-4 py-2.5">
-                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">SUCCESS</span>
+                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">SUCCESS</span>
                                     </td>
-                                    <td class="px-4 py-2.5 text-white" x-text="res.rows.toLocaleString()"></td>
-                                    <td class="px-4 py-2.5 text-slate-300" x-text="res.columns_count"></td>
+                                    <td class="px-4 py-2.5 text-slate-800 dark:text-slate-100" x-text="res.rows.toLocaleString()"></td>
+                                    <td class="px-4 py-2.5 text-slate-600 dark:text-slate-300" x-text="res.columns_count"></td>
                                     <td class="px-4 py-2.5 font-sans">
-                                        <span class="inline-flex items-center gap-1 text-[11px]" :class="res.is_valid ? 'text-emerald-400' : 'text-amber-400'">
+                                        <span class="inline-flex items-center gap-1 text-[11px]" :class="res.is_valid ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400'">
                                             <i data-lucide="shield-check" class="w-3.5 h-3.5"></i>
                                             <span x-text="res.is_valid ? 'All Rules Passed' : 'Violations Found'"></span>
                                         </span>
                                     </td>
                                     <td class="px-4 py-2.5 text-right font-sans space-x-1.5">
-                                        <button @click="viewDomainData(res.domain)" class="bg-blue-600/20 hover:bg-blue-600/30 text-blue-300 border border-blue-500/30 px-2 py-1 rounded text-xs">Explore</button>
-                                        <button @click="downloadDomainFile(res.domain, 'csv')" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-2 py-1 rounded text-xs">CSV</button>
-                                        <button @click="downloadDomainFile(res.domain, 'xpt')" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-2 py-1 rounded text-xs">XPT</button>
+                                        <button @click="viewDomainData(res.domain)" class="bg-blue-50 dark:bg-blue-950/60 hover:bg-blue-100 dark:hover:bg-blue-900/60 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800 px-2 py-1 rounded text-xs transition">Explore</button>
+                                        <button @click="downloadDomainFile(res.domain, 'csv')" class="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 px-2 py-1 rounded text-xs transition">CSV</button>
+                                        <button @click="downloadDomainFile(res.domain, 'xpt')" class="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 px-2 py-1 rounded text-xs transition">XPT</button>
                                     </td>
                                 </tr>
                             </template>
                             <template x-if="pipelineResults.length === 0">
                                 <tr>
-                                    <td colspan="6" class="px-4 py-8 text-center text-slate-500 font-sans">No build run yet. Click 'Run SDTM Build Pipeline' above.</td>
+                                    <td colspan="6" class="px-4 py-8 text-center text-slate-400 dark:text-slate-500 font-sans">No build run yet. Click 'Run SDTM Build Pipeline' above.</td>
                                 </tr>
                             </template>
                         </tbody>
@@ -579,49 +564,54 @@
 
         <!-- ================= TAB 4: SDTM DATA EXPLORER ================= -->
         <div x-show="activeTab === 'viewer'" x-cloak class="space-y-6">
-            <div class="bg-slate-950 border border-slate-800 rounded-xl p-6">
-                <!-- Domain Selector Bar -->
-                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4 pb-4 border-b border-slate-800">
-                    <div class="flex items-center gap-2 overflow-x-auto max-w-2xl py-1">
-                        <template x-for="d in generatedDomains" :key="d">
-                            <button @click="selectViewerDomain(d)" :class="viewerDomain === d ? 'bg-blue-600 text-white font-bold shadow' : 'bg-slate-900 text-slate-300 hover:bg-slate-800 border border-slate-800'" class="px-3 py-1.5 rounded-lg text-xs font-mono transition">
-                                <span x-text="d"></span>
-                            </button>
-                        </template>
+            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6 shadow-sm">
+                <!-- Control Bar -->
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
+                    <div class="flex items-center gap-3">
+                        <label class="text-xs font-semibold text-slate-500 dark:text-slate-400">Select Domain:</label>
+                        <select x-model="viewerDomain" @change="fetchDomainData()" class="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 text-xs px-3 py-1.5 rounded-lg focus:outline-none focus:border-blue-500 font-mono font-bold">
+                            <template x-for="d in generatedDomains" :key="d">
+                                <option :value="d" x-text="d"></option>
+                            </template>
+                        </select>
+                        <span class="text-xs text-slate-400" x-text="`Total: ${viewerTotal.toLocaleString()} records`"></span>
                     </div>
 
-                    <!-- Search Filter -->
-                    <div class="w-full sm:w-64">
-                        <input type="text" x-model="viewerSearch" @input.debounce.300ms="fetchViewerData()" placeholder="Filter records in domain..." class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-blue-500">
+                    <div class="flex items-center gap-2">
+                        <input type="text" x-model="viewerSearch" @input.debounce.300ms="fetchDomainData()" placeholder="Filter records..." class="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 text-xs px-3 py-1.5 rounded-lg focus:outline-none focus:border-blue-500">
+                        <button @click="downloadDomainFile(viewerDomain, 'csv')" :disabled="!viewerDomain" class="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs px-3 py-1.5 rounded-lg flex items-center gap-1 transition">
+                            <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                            <span>CSV</span>
+                        </button>
                     </div>
                 </div>
 
-                <!-- Interactive Data Grid -->
-                <div class="overflow-x-auto border border-slate-800 rounded-lg max-h-[500px]">
-                    <table class="min-w-full divide-y divide-slate-800 text-xs text-left">
-                        <thead class="bg-slate-900 text-slate-300 font-semibold uppercase text-[10px] tracking-wider sticky top-0 z-10 shadow">
+                <!-- SDTM Grid -->
+                <div class="overflow-x-auto border border-slate-200 dark:border-slate-800 rounded-lg max-h-[500px]">
+                    <table class="min-w-full divide-y divide-slate-200 dark:divide-slate-800 text-xs text-left">
+                        <thead class="bg-slate-50 dark:bg-slate-800 sticky top-0 text-slate-600 dark:text-slate-300 font-semibold uppercase text-[10px] tracking-wider z-10">
                             <tr>
                                 <template x-for="col in viewerColumns" :key="col">
-                                    <th class="px-3 py-2.5 whitespace-nowrap">
-                                        <div class="flex items-center gap-1 font-mono">
+                                    <th class="px-4 py-2.5 whitespace-nowrap">
+                                        <div class="flex items-center gap-1">
                                             <span x-text="col"></span>
-                                            <span class="text-[8px] px-1 bg-slate-800 text-slate-400 rounded" x-text="viewerDtypes[col] || 'str'"></span>
+                                            <span class="text-[9px] text-slate-400 font-normal" x-text="viewerDtypes[col] || ''"></span>
                                         </div>
                                     </th>
                                 </template>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-slate-800/60 bg-slate-950 font-mono">
-                            <template x-for="(row, idx) in viewerRows" :key="idx">
-                                <tr class="hover:bg-slate-900/50 transition">
+                        <tbody class="divide-y divide-slate-100 dark:divide-slate-800/60 bg-white dark:bg-slate-900 font-mono text-[11px]">
+                            <template x-for="(row, r_idx) in viewerRows" :key="r_idx">
+                                <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition">
                                     <template x-for="col in viewerColumns" :key="col">
-                                        <td class="px-3 py-2 whitespace-nowrap text-slate-200" x-text="row[col] !== null ? row[col] : '·'"></td>
+                                        <td class="px-4 py-2 whitespace-nowrap text-slate-700 dark:text-slate-300" x-text="row[col] !== null ? row[col] : ''"></td>
                                     </template>
                                 </tr>
                             </template>
                             <template x-if="viewerRows.length === 0">
                                 <tr>
-                                    <td :colspan="viewerColumns.length || 1" class="px-4 py-8 text-center text-slate-500 font-sans">No records found.</td>
+                                    <td :colspan="viewerColumns.length || 1" class="px-4 py-8 text-center text-slate-400 dark:text-slate-500 font-sans">No data available. Run the pipeline in Step 3 first.</td>
                                 </tr>
                             </template>
                         </tbody>
@@ -629,11 +619,11 @@
                 </div>
 
                 <!-- Pagination -->
-                <div class="flex justify-between items-center mt-3 text-xs text-slate-400">
-                    <span x-text="`Showing ${viewerRows.length} of ${viewerTotal} rows in domain ${viewerDomain}`"></span>
-                    <div class="flex gap-2">
-                        <button @click="viewerPage--; fetchViewerData()" :disabled="viewerPage <= 1" class="px-2.5 py-1 bg-slate-900 hover:bg-slate-800 border border-slate-700 rounded disabled:opacity-40">Previous</button>
-                        <button @click="viewerPage++; fetchViewerData()" :disabled="viewerPage * viewerPageSize >= viewerTotal" class="px-2.5 py-1 bg-slate-900 hover:bg-slate-800 border border-slate-700 rounded disabled:opacity-40">Next</button>
+                <div class="flex justify-between items-center mt-3 text-xs text-slate-500 dark:text-slate-400">
+                    <span x-text="`Showing ${(viewerPage - 1) * viewerPageSize + 1} to ${Math.min(viewerPage * viewerPageSize, viewerTotal)} of ${viewerTotal.toLocaleString()} records`"></span>
+                    <div class="space-x-1">
+                        <button @click="viewerPage--; fetchDomainData()" :disabled="viewerPage <= 1" class="px-2.5 py-1 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded disabled:opacity-40 transition">Prev</button>
+                        <button @click="viewerPage++; fetchDomainData()" :disabled="viewerPage * viewerPageSize >= viewerTotal" class="px-2.5 py-1 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded disabled:opacity-40 transition">Next</button>
                     </div>
                 </div>
             </div>
@@ -642,207 +632,145 @@
 
         <!-- ================= TAB 5: VALIDATION DASHBOARD ================= -->
         <div x-show="activeTab === 'verifications'" x-cloak class="space-y-6">
-            <div class="bg-slate-950 border border-slate-800 rounded-xl p-6">
-                <h2 class="text-sm font-bold text-white flex items-center gap-2 mb-4">
-                    <i data-lucide="shield-alert" class="w-4 h-4 text-indigo-400"></i>
-                    <span>CDISC Dataset Conformance &amp; Quality Checks</span>
-                </h2>
+            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6 shadow-sm">
+                <div class="flex justify-between items-center mb-6">
+                    <div>
+                        <h2 class="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                            <i data-lucide="shield-check" class="w-4 h-4 text-emerald-600 dark:text-emerald-400"></i>
+                            <span>CDISC Conformance &amp; Quality Verification Reports</span>
+                        </h2>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">Declarative quality checks (uniqueness, missingness, domain keys) evaluated across generated datasets.</p>
+                    </div>
+                </div>
 
-                <div class="overflow-x-auto border border-slate-800 rounded-lg">
-                    <table class="min-w-full divide-y divide-slate-800 text-xs text-left">
-                        <thead class="bg-slate-900 text-slate-300 font-semibold uppercase text-[10px] tracking-wider">
-                            <tr>
-                                <th class="px-3 py-2.5">Domain</th>
-                                <th class="px-3 py-2.5">Check Type</th>
-                                <th class="px-3 py-2.5">Target Column / Key</th>
-                                <th class="px-3 py-2.5">Rule Specification</th>
-                                <th class="px-3 py-2.5">Status</th>
-                                <th class="px-3 py-2.5">Violations</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-slate-800/60 bg-slate-950 font-mono">
-                            <template x-for="v in allVerifications" :key="v.domain + v.target + v.check_type">
-                                <tr class="hover:bg-slate-900/50 transition">
-                                    <td class="px-3 py-2 font-bold text-cyan-400" x-text="v.domain"></td>
-                                    <td class="px-3 py-2 text-slate-400 font-sans" x-text="v.check_type"></td>
-                                    <td class="px-3 py-2 text-blue-400" x-text="v.target"></td>
-                                    <td class="px-3 py-2 text-slate-300 font-sans" x-text="v.rule"></td>
-                                    <td class="px-3 py-2">
-                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold" :class="v.status === 'PASS' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-red-500/20 text-red-400 border border-red-500/30'" x-text="v.status"></span>
-                                    </td>
-                                    <td class="px-3 py-2 text-white" x-text="v.failing_records"></td>
-                                </tr>
-                            </template>
-                            <template x-if="allVerifications.length === 0">
-                                <tr>
-                                    <td colspan="6" class="px-4 py-8 text-center text-slate-500 font-sans">No verifications available. Execute the build pipeline first.</td>
-                                </tr>
-                            </template>
-                        </tbody>
-                    </table>
+                <div class="space-y-4">
+                    <template x-for="(report, domain) in verificationReports" :key="domain">
+                        <div class="border border-slate-200 dark:border-slate-800 rounded-lg p-4 bg-slate-50/50 dark:bg-slate-800/30">
+                            <div class="flex justify-between items-center mb-2">
+                                <div class="flex items-center gap-2">
+                                    <span class="font-mono font-bold text-sm text-slate-900 dark:text-white" x-text="domain"></span>
+                                    <span class="text-xs px-2 py-0.5 rounded font-bold" :class="report.is_valid ? 'bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300' : 'bg-red-100 dark:bg-red-950 text-red-700 dark:text-red-300'" x-text="report.is_valid ? 'PASSED' : 'VIOLATIONS'"></span>
+                                </div>
+                                <span class="text-xs text-slate-500" x-text="`${report.total_rules} rule(s) checked`"></span>
+                            </div>
+
+                            <div class="space-y-1.5 mt-3 font-mono text-xs">
+                                <template x-for="(rule, r_idx) in report.rules" :key="r_idx">
+                                    <div class="flex justify-between items-center p-2 rounded bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800/80">
+                                        <div class="flex items-center gap-2">
+                                            <i data-lucide="check" class="w-3.5 h-3.5 text-emerald-500" x-show="rule.status === 'PASS'"></i>
+                                            <i data-lucide="x" class="w-3.5 h-3.5 text-red-500" x-show="rule.status === 'FAIL'"></i>
+                                            <span class="font-sans text-slate-700 dark:text-slate-300" x-text="rule.description || rule.rule_type"></span>
+                                        </div>
+                                        <span :class="rule.status === 'PASS' ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'" x-text="rule.status === 'PASS' ? '0 violations' : `${rule.violations_count} violations`"></span>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+                    </template>
+                    <template x-if="Object.keys(verificationReports).length === 0">
+                        <div class="py-12 text-center text-slate-400 dark:text-slate-500">
+                            <i data-lucide="shield-alert" class="w-8 h-8 mx-auto mb-2 opacity-50"></i>
+                            <p class="text-xs">No verification reports yet. Run the build pipeline in Step 3 to execute quality checks.</p>
+                        </div>
+                    </template>
                 </div>
             </div>
         </div>
 
 
-        <!-- ================= TAB 6: EXPORT CENTER ================= -->
+        <!-- ================= TAB 6: EXPORT & PACKAGE ================= -->
         <div x-show="activeTab === 'export'" x-cloak class="space-y-6">
-            <!-- Full Package Download Card -->
-            <div class="bg-gradient-to-r from-blue-900/40 via-indigo-900/30 to-slate-950 border border-blue-500/30 rounded-xl p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                <div>
-                    <h2 class="text-base font-bold text-white flex items-center gap-2">
-                        <i data-lucide="archive" class="w-5 h-5 text-blue-400"></i>
-                        <span>Download Complete SDTM Submission Archive (.zip)</span>
-                    </h2>
-                    <p class="text-xs text-slate-400 mt-1">Includes all generated domain datasets across CSV, Parquet, and SAS Transport (.xpt) formatted files.</p>
+            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6 shadow-sm">
+                <div class="flex justify-between items-center mb-6">
+                    <div>
+                        <h2 class="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                            <i data-lucide="package-check" class="w-4 h-4 text-blue-600 dark:text-blue-400"></i>
+                            <span>SDTM Submission Export Center</span>
+                        </h2>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">Download SAS Transport (XPT v5), Apache Parquet, CSV datasets, and submission packages.</p>
+                    </div>
+
+                    <a href="/api/export/zip" download class="bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs px-4 py-2 rounded-lg flex items-center gap-2 transition shadow-sm">
+                        <i data-lucide="archive" class="w-4 h-4"></i>
+                        <span>Download Complete Package (.zip)</span>
+                    </a>
                 </div>
 
-                <a href="/api/export_all_zip" class="bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs px-5 py-2.5 rounded-lg flex items-center gap-2 shadow-lg shadow-blue-600/30 transition">
-                    <i data-lucide="download" class="w-4 h-4"></i>
-                    <span>Download All SDTM Datasets</span>
-                </a>
-            </div>
-
-            <!-- Individual Datasets Grid -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <template x-for="res in pipelineResults" :key="res.domain">
-                    <div class="bg-slate-950 border border-slate-800 rounded-xl p-4 flex flex-col justify-between">
-                        <div>
-                            <div class="flex justify-between items-center mb-2">
-                                <span class="font-mono text-lg font-bold text-cyan-400" x-text="res.domain"></span>
-                                <span class="text-[10px] bg-slate-900 text-slate-400 px-2 py-0.5 rounded border border-slate-800" x-text="`${res.rows} rows · ${res.columns_count} cols`"></span>
-                            </div>
-                            <p class="text-xs text-slate-400 mb-4" x-text="`Standard CDISC ${res.domain} Domain dataset.`"></p>
-                        </div>
-
-                        <div class="grid grid-cols-3 gap-2 pt-3 border-t border-slate-800/80">
-                            <button @click="downloadDomainFile(res.domain, 'csv')" class="bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-200 text-xs py-1.5 rounded font-mono text-center">.CSV</button>
-                            <button @click="downloadDomainFile(res.domain, 'parquet')" class="bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-200 text-xs py-1.5 rounded font-mono text-center">.PARQUET</button>
-                            <button @click="downloadDomainFile(res.domain, 'xpt')" class="bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-200 text-xs py-1.5 rounded font-mono text-center">.XPT</button>
-                        </div>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div class="border border-slate-200 dark:border-slate-800 rounded-lg p-4 bg-slate-50/50 dark:bg-slate-800/30">
+                        <div class="font-bold text-slate-900 dark:text-white text-xs mb-1">SAS Transport (.XPT)</div>
+                        <p class="text-[11px] text-slate-500 dark:text-slate-400 mb-3">FDA/PMDA regulatory submission standard.</p>
+                        <div class="text-[10px] text-slate-400">Generated via PyReadStat</div>
                     </div>
-                </template>
+                    <div class="border border-slate-200 dark:border-slate-800 rounded-lg p-4 bg-slate-50/50 dark:bg-slate-800/30">
+                        <div class="font-bold text-slate-900 dark:text-white text-xs mb-1">Apache Parquet (.parquet)</div>
+                        <p class="text-[11px] text-slate-500 dark:text-slate-400 mb-3">High-speed columnar analytical storage.</p>
+                        <div class="text-[10px] text-slate-400">Snappy compressed</div>
+                    </div>
+                    <div class="border border-slate-200 dark:border-slate-800 rounded-lg p-4 bg-slate-50/50 dark:bg-slate-800/30">
+                        <div class="font-bold text-slate-900 dark:text-white text-xs mb-1">Delimited Text (.CSV)</div>
+                        <p class="text-[11px] text-slate-500 dark:text-slate-400 mb-3">Universal tabular standard for data inspection.</p>
+                        <div class="text-[10px] text-slate-400">UTF-8 encoded</div>
+                    </div>
+                </div>
             </div>
         </div>
 
     </main>
 
-    <!-- AI Settings & Provider Modal -->
-    <div x-show="showSettingsModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
-        <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-5" @click.away="showSettingsModal = false">
-            <div class="flex justify-between items-center pb-3 border-b border-slate-800">
-                <div class="flex items-center gap-2">
-                    <i data-lucide="key-round" class="w-5 h-5 text-amber-400"></i>
-                    <h3 class="text-base font-bold text-white">AI Provider &amp; API Key Settings</h3>
-                </div>
-                <button @click="showSettingsModal = false" class="text-slate-400 hover:text-white">&times;</button>
+    <!-- Settings Modal -->
+    <div x-show="showSettingsModal" x-cloak class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl max-w-md w-full p-6 space-y-4 shadow-xl">
+            <div class="flex justify-between items-center pb-3 border-b border-slate-100 dark:border-slate-800">
+                <h3 class="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                    <i data-lucide="cpu" class="w-4 h-4 text-blue-600 dark:text-blue-400"></i>
+                    <span>AI Engine Configuration</span>
+                </h3>
+                <button @click="showSettingsModal = false" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
             </div>
 
-            <!-- Provider Selection -->
-            <div class="space-y-2">
-                <label class="text-xs font-semibold text-slate-300">Select AI LLM Engine</label>
-                <div class="grid grid-cols-2 gap-2">
-                    <button @click="aiConfig.provider = 'gemini'" :class="aiConfig.provider === 'gemini' ? 'bg-indigo-600/30 border-indigo-500 text-white font-bold' : 'bg-slate-950 border-slate-800 text-slate-400'" class="p-3 rounded-lg border text-left text-xs transition">
-                        <div class="font-bold flex items-center gap-1.5">
-                            <span>Google Gemini</span>
-                        </div>
-                        <div class="text-[10px] text-slate-400 mt-0.5">Gemini 2.5 / Flash</div>
-                    </button>
-                    <button @click="aiConfig.provider = 'anthropic'" :class="aiConfig.provider === 'anthropic' ? 'bg-indigo-600/30 border-indigo-500 text-white font-bold' : 'bg-slate-950 border-slate-800 text-slate-400'" class="p-3 rounded-lg border text-left text-xs transition">
-                        <div class="font-bold flex items-center gap-1.5">
-                            <span>Anthropic Claude</span>
-                        </div>
-                        <div class="text-[10px] text-slate-400 mt-0.5">Claude 3.7 / 3.5</div>
-                    </button>
-                    <button @click="aiConfig.provider = 'openai'" :class="aiConfig.provider === 'openai' ? 'bg-indigo-600/30 border-indigo-500 text-white font-bold' : 'bg-slate-950 border-slate-800 text-slate-400'" class="p-3 rounded-lg border text-left text-xs transition">
-                        <div class="font-bold flex items-center gap-1.5">
-                            <span>OpenAI</span>
-                        </div>
-                        <div class="text-[10px] text-slate-400 mt-0.5">GPT-4o / GPT-4o-mini</div>
-                    </button>
-                    <button @click="aiConfig.provider = 'local'" :class="aiConfig.provider === 'local' ? 'bg-indigo-600/30 border-indigo-500 text-white font-bold' : 'bg-slate-950 border-slate-800 text-slate-400'" class="p-3 rounded-lg border text-left text-xs transition">
-                        <div class="font-bold flex items-center gap-1.5">
-                            <span>Local CDISC Engine</span>
-                        </div>
-                        <div class="text-[10px] text-slate-400 mt-0.5">100% Offline / Free</div>
-                    </button>
-                </div>
-            </div>
-
-            <!-- API Key Input (only if not local) -->
-            <div x-show="aiConfig.provider !== 'local'" class="space-y-2">
-                <div class="flex justify-between items-center">
-                    <label class="text-xs font-semibold text-slate-300" x-text="`${getProviderName(aiConfig.provider)} API Key`"></label>
-                    <span class="text-[10px] text-slate-400">Stored safely in browser only</span>
-                </div>
-                <div class="relative">
-                    <input :type="showKeyText ? 'text' : 'password'" x-model="aiConfig.apiKey" placeholder="Paste your API key here..." class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500 pr-10 font-mono">
-                    <button @click="showKeyText = !showKeyText" class="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-200 text-xs">
-                        <span x-text="showKeyText ? 'Hide' : 'Show'"></span>
-                    </button>
-                </div>
-            </div>
-
-            <!-- Model Selection (only if not local) -->
-            <div x-show="aiConfig.provider !== 'local'" class="space-y-1.5">
-                <label class="text-xs font-semibold text-slate-300">Model Identifier / Version</label>
-                <div class="flex gap-2">
-                    <select x-model="aiConfig.modelName" class="bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500 flex-1 font-mono">
-                        <template x-if="aiConfig.provider === 'gemini'">
-                            <optgroup label="Google Gemini Models">
-                                <option value="gemini-2.5-flash">gemini-2.5-flash (Fast &amp; Accurate)</option>
-                                <option value="gemini-2.0-flash">gemini-2.0-flash (Recommended)</option>
-                                <option value="gemini-1.5-pro">gemini-1.5-pro (Deep Reasoning)</option>
-                                <option value="gemini-1.5-flash">gemini-1.5-flash</option>
-                            </optgroup>
-                        </template>
-                        <template x-if="aiConfig.provider === 'anthropic'">
-                            <optgroup label="Anthropic Claude Models">
-                                <option value="claude-3-7-sonnet-20250219">claude-3-7-sonnet-20250219 (Latest 3.7)</option>
-                                <option value="claude-3-5-sonnet-20241022">claude-3-5-sonnet-20241022</option>
-                                <option value="claude-3-5-haiku-20241022">claude-3-5-haiku-20241022</option>
-                            </optgroup>
-                        </template>
-                        <template x-if="aiConfig.provider === 'openai'">
-                            <optgroup label="OpenAI Models">
-                                <option value="gpt-4o">gpt-4o (Omni Flagship)</option>
-                                <option value="gpt-4o-mini">gpt-4o-mini (Fast)</option>
-                                <option value="o3-mini">o3-mini (Reasoning)</option>
-                            </optgroup>
-                        </template>
+            <div class="space-y-3 text-xs">
+                <div>
+                    <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">AI Provider</label>
+                    <select x-model="aiConfig.provider" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 p-2 rounded-lg focus:outline-none focus:border-blue-500">
+                        <option value="gemini">Google Gemini (Gemini 2.5 / 2.0)</option>
+                        <option value="anthropic">Anthropic Claude (Claude 3.7 / 3.5)</option>
+                        <option value="openai">OpenAI (GPT-4o / GPT-4o-mini)</option>
+                        <option value="local">Local CDISC Semantic Engine (Offline / No Key)</option>
                     </select>
                 </div>
-            </div>
 
-            <!-- Privacy Guarantee Banner -->
-            <div class="bg-emerald-950/40 border border-emerald-500/30 rounded-lg p-3 text-xs text-emerald-300 space-y-1">
-                <div class="font-bold flex items-center gap-1.5">
-                    <i data-lucide="shield-check" class="w-4 h-4 text-emerald-400"></i>
-                    <span>Clinical Data Privacy &amp; HIPAA Guarantee</span>
+                <div x-show="aiConfig.provider !== 'local'">
+                    <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">API Key</label>
+                    <div class="relative">
+                        <input :type="showKeyText ? 'text' : 'password'" x-model="aiConfig.apiKey" placeholder="Enter API Key (Stored only in your browser)" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 p-2 rounded-lg focus:outline-none focus:border-blue-500 pr-8">
+                        <button @click="showKeyText = !showKeyText" type="button" class="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+                            <i :data-lucide="showKeyText ? 'eye-off' : 'eye'" class="w-3.5 h-3.5"></i>
+                        </button>
+                    </div>
                 </div>
-                <p class="text-[11px] text-emerald-200/80 leading-relaxed">
-                    Only CRF structural metadata (Form names, Item OIDs, and Question text) is sent to the LLM for schema synthesis. <strong>Zero Protected Health Information (PHI) or patient-level data (IPD) is ever transmitted.</strong>
-                </p>
+
+                <div x-show="aiConfig.provider !== 'local'">
+                    <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Model Override (Optional)</label>
+                    <input type="text" x-model="aiConfig.modelName" placeholder="e.g. gemini-2.5-pro, claude-3-7-sonnet" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 p-2 rounded-lg focus:outline-none focus:border-blue-500">
+                </div>
             </div>
 
-            <!-- Actions -->
-            <div class="flex justify-end gap-2 pt-2 border-t border-slate-800">
-                <button @click="saveSettings()" class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs px-4 py-2 rounded-lg font-bold shadow-lg shadow-indigo-600/30 transition">
-                    Save AI Preferences
-                </button>
+            <div class="flex justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
+                <button @click="showSettingsModal = false" class="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-medium transition">Cancel</button>
+                <button @click="saveSettings()" class="px-4 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-sm transition">Save Preferences</button>
             </div>
         </div>
     </div>
 
-    <!-- Footer -->
-    <footer class="bg-slate-950 border-t border-slate-800/80 py-4 text-center text-xs text-slate-500">
-        CDISC Builder v2 Engine &middot; Powered by Polars, Multi-Provider AI Schema Synthesizer &middot; Yamaa Specification Standard
-    </footer>
-
-    <!-- Alpine App Script -->
+    <!-- Alpine.js Application State & Methods -->
     <script>
         function cdiscApp() {
             return {
+                isDarkMode: localStorage.getItem('cdisc_theme') !== 'light',
                 activeTab: 'ingest',
                 loading: false,
                 aiGenerating: false,
@@ -852,23 +780,23 @@
                 showSettingsModal: false,
                 showKeyText: false,
 
-                // AI Configuration (Persisted in browser localStorage)
+                // AI Configuration
                 aiConfig: {
                     provider: localStorage.getItem('cdisc_ai_provider') || 'gemini',
                     apiKey: localStorage.getItem('cdisc_ai_key') || '',
                     modelName: localStorage.getItem('cdisc_ai_model') || ''
                 },
                 
-                // Study & Ingest State (Starts completely empty)
+                // Study & Ingest State
                 studyInfo: {},
                 studyStats: {},
                 metadataRows: [],
                 metaTotal: 0,
                 metaPage: 1,
-                metaPageSize: 50,
+                metaPageSize: 25,
                 metaSearch: '',
 
-                // CRF Forms Exploration State
+                // CRF Form Explorer
                 crfForms: [],
                 formMappings: {},
                 selectedForms: {},
@@ -881,6 +809,7 @@
 
                 // Pipeline Results
                 pipelineResults: [],
+                pipelineLogs: [],
 
                 // Viewer State
                 generatedDomains: [],
@@ -893,276 +822,102 @@
                 viewerPageSize: 50,
                 viewerSearch: '',
 
-                // Verifications
-                allVerifications: [],
+                // Verification Reports
+                verificationReports: {},
 
-                // Yamaa Schema Templates
+                // Built-in templates
                 templates: {
-                    FINDINGS: `domain: LB
-datasets:
-  ODM: input/odm.csv
-base: ODM
-keys: [STUDYID, USUBJID, LBSEQ]
-
-columns:
-  - name: STUDYID
-    type: str
-    derivation:
-      source: ODM.StudyOID
-
-  - name: DOMAIN
-    type: str
-    derivation:
-      literal: LB
-
-  - name: USUBJID
-    type: str
-    derivation:
-      source: ODM.SubjectKey
-
-  - name: LBSEQ
-    type: int
-    derivation:
-      row_number:
-        group_by: [STUDYID, USUBJID]
-        order_by: [LBDTC, LBTESTCD]
-
-  - name: LBTESTCD
-    type: str
-
-  - name: LBTEST
-    type: str
-
-  - name: LBORRES
-    type: str
-
-  - name: LBSTRESN
-    type: float
-
-  - name: LBDTC
-    type: date
-    derivation:
-      source: ODM.IT.LB.LBDTC
-
-rows:
-  - id: calcium
-    filter: "ODM.ItemOID = 'IT.LB.CALCIUM' AND ODM.Value IS NOT NULL"
-    derivations:
-      LBTESTCD: { literal: "CA" }
-      LBTEST: { literal: "Calcium" }
-      LBORRES: { source: "ODM.Value" }
-      LBSTRESN:
-        value: { source: "ODM.Value" }
-        conversion_failure: null
-
-verifications:
-  - unique:
-      columns: [STUDYID, USUBJID, LBSEQ]
-`,
-                    EVENTS: `domain: AE
-datasets:
-  ODM: input/odm.csv
-base: ODM
-keys: [STUDYID, USUBJID, AESEQ]
-
-columns:
-  - name: STUDYID
-    type: str
-    derivation:
-      source: ODM.StudyOID
-
-  - name: DOMAIN
-    type: str
-    derivation:
-      literal: AE
-
-  - name: USUBJID
-    type: str
-    derivation:
-      source: ODM.SubjectKey
-
-  - name: AESEQ
-    type: int
-    derivation:
-      row_number:
-        group_by: [STUDYID, USUBJID]
-        order_by: [AESTDTC, AETERM]
-
-  - name: AETERM
-    type: str
-    derivation:
-      source: ODM.IT.AE.AETERM
-
-  - name: AESEV
-    type: str
-    derivation:
-      source: ODM.IT.AE.AESEV
-
-  - name: AESTDTC
-    type: date
-    derivation:
-      source: ODM.IT.AE.AESTDTC
-
-verifications:
-  - unique:
-      columns: [STUDYID, USUBJID, AESEQ]
-`,
                     DM: `domain: DM
 datasets:
   ODM: input/odm.csv
-formoid: ["FO.NCT00789880.DM"]
 base: ODM
 keys: [STUDYID, USUBJID]
 
 columns:
   - name: STUDYID
     type: str
-    label: Study Identifier
     derivation: { source: StudyOID }
-
   - name: DOMAIN
     type: str
-    label: Domain Abbreviation
     derivation: { literal: DM }
-
   - name: USUBJID
     type: str
-    label: Unique Subject Identifier
     derivation: { source: SubjectKey }
-
   - name: SUBJID
     type: str
-    label: Subject Identifier for the Study
     derivation: { source: SubjectKey }
-
-  - name: SITEID
-    type: str
-    derivation: { source: IT.NCT00789880.DM.SITEID }
-
-  - name: AGE
-    type: int
-    label: Age
-    derivation: { source: IT.NCT00789880.DM.AGE }
-
-  - name: AGEU
-    type: str
-    derivation: { literal: YEARS }
-
-  - name: SEX
-    type: str
-    label: Sex
-    derivation:
-      mapping:
-        source: IT.NCT00789880.DM.SEX
-        dict: { M: M, F: F, Male: M, Female: F, Unknown: U, U: U }
-
-  - name: RACE
-    type: str
-    derivation: { source: IT.NCT00789880.DM.RACE }
-
-  - name: ETHNIC
-    type: str
-    derivation:
-      mapping:
-        source: IT.NCT00789880.DM.ETHNIC
-        dict:
-          "NOT HISPANIC": "NOT HISPANIC OR LATINO"
-          "HISPANIC": "HISPANIC OR LATINO"
-
-  - name: COUNTRY
-    type: str
-    derivation: { source: IT.NCT00789880.DM.COUNTRY }
-
-  - name: ARMCD
-    type: str
-    derivation: { source: IT.NCT00789880.DM.ARMCD }
-
-  - name: ARM
-    type: str
-    label: Description of Planned Arm
-    derivation: { source: IT.NCT00789880.DM.ARM }
-
-  - name: ACTARMCD
-    type: str
-    derivation: { source: ARMCD }
-
-  - name: ACTARM
-    type: str
-    derivation: { source: ARM }
-
-  - name: RFSTDTC
-    type: date
-    derivation: { source: IT.NCT00789880.DM.RFSTDTC }
-
-verifications:
-  - unique:
-      columns: [STUDYID, USUBJID]
-  - not_missing:
-      columns: [STUDYID, USUBJID, SEX]
 `,
-                    CODING: `domain: AE
+                    VS: `domain: VS
 datasets:
-  AE_RAW: input/ae_raw.csv
-  MEDDRA: input/meddra_26_1.csv
-base: AE_RAW
+  ODM: input/odm.csv
+base: ODM
+keys: [STUDYID, USUBJID, VSTESTCD, VISITNUM]
+
+columns:
+  - name: STUDYID
+    type: str
+    derivation: { source: StudyOID }
+  - name: DOMAIN
+    type: str
+    derivation: { literal: VS }
+  - name: USUBJID
+    type: str
+    derivation: { source: SubjectKey }
+`,
+                    LB: `domain: LB
+datasets:
+  ODM: input/odm.csv
+base: ODM
+keys: [STUDYID, USUBJID, LBTESTCD, LBSEQ]
+
+columns:
+  - name: STUDYID
+    type: str
+    derivation: { source: StudyOID }
+  - name: DOMAIN
+    type: str
+    derivation: { literal: LB }
+  - name: USUBJID
+    type: str
+    derivation: { source: SubjectKey }
+`,
+                    AE: `domain: AE
+datasets:
+  ODM: input/odm.csv
+base: ODM
 keys: [STUDYID, USUBJID, AESEQ]
 
 columns:
   - name: STUDYID
     type: str
-    derivation: { source: AE_RAW.STUDYID }
-
+    derivation: { source: StudyOID }
   - name: DOMAIN
     type: str
     derivation: { literal: AE }
-
   - name: USUBJID
     type: str
-    derivation: { source: AE_RAW.USUBJID }
-
-  - name: AESEQ
-    type: int
-    derivation: { source: AE_RAW.AESEQ }
-
-  - name: AETERM
-    type: str
-    derivation: { source: AE_RAW.AETERM }
-
-  - name: AEDECOD
-    type: str
-    derivation:
-      mapping_from:
-        source: AE_RAW.AETERM
-        dataset: MEDDRA
-        key: LLTNAME
-        value: PTNAME
-        unmapped: "NOT CODED"
-
-  - name: AEBODSYS
-    type: str
-    derivation:
-      mapping_from:
-        source: AE_RAW.AETERM
-        dataset: MEDDRA
-        key: LLTNAME
-        value: SOCNAME
-        unmapped: "NOT CODED"
+    derivation: { source: SubjectKey }
 `
                 },
 
-                getProviderLabel() {
-                    if (this.aiConfig.provider === 'local') return 'Local CDISC Engine (Offline)';
-                    if (this.aiConfig.provider === 'gemini') return 'Google Gemini (2.5)';
-                    if (this.aiConfig.provider === 'anthropic') return 'Anthropic Claude (3.7)';
-                    if (this.aiConfig.provider === 'openai') return 'OpenAI (GPT-4o)';
-                    return 'AI Engine';
+                toggleTheme() {
+                    this.isDarkMode = !this.isDarkMode;
+                    if (this.isDarkMode) {
+                        document.documentElement.classList.add('dark');
+                        localStorage.setItem('cdisc_theme', 'dark');
+                    } else {
+                        document.documentElement.classList.remove('dark');
+                        localStorage.setItem('cdisc_theme', 'light');
+                    }
+                    this.$nextTick(() => lucide.createIcons());
                 },
 
-                getProviderName(p) {
-                    if (p === 'gemini') return 'Google Gemini';
-                    if (p === 'anthropic') return 'Anthropic Claude';
-                    if (p === 'openai') return 'OpenAI';
-                    return 'Local Engine';
+                getProviderLabel() {
+                    if (this.aiConfig.provider === 'local') return 'Offline Engine';
+                    if (this.aiConfig.provider === 'gemini') return 'Google Gemini';
+                    if (this.aiConfig.provider === 'anthropic') return 'Claude 3.7';
+                    if (this.aiConfig.provider === 'openai') return 'OpenAI GPT-4o';
+                    return 'AI Engine';
                 },
 
                 saveSettings() {
@@ -1170,11 +925,16 @@ columns:
                     localStorage.setItem('cdisc_ai_key', this.aiConfig.apiKey);
                     localStorage.setItem('cdisc_ai_model', this.aiConfig.modelName);
                     this.showSettingsModal = false;
-                    alert('AI preferences saved successfully!');
                 },
 
                 async initApp() {
+                    if (this.isDarkMode) {
+                        document.documentElement.classList.add('dark');
+                    } else {
+                        document.documentElement.classList.remove('dark');
+                    }
                     lucide.createIcons();
+                    
                     await this.fetchStudyInfo();
                     await this.fetchSpecs();
                     await this.fetchCRFForms();
@@ -1184,7 +944,7 @@ columns:
                         clearTimeout(valTimer);
                         valTimer = setTimeout(() => {
                             this.validateCurrentYaml();
-                        }, 350);
+                        }, 300);
                     });
 
                     this.$watch('activeTab', (tab) => {
@@ -1211,9 +971,9 @@ columns:
                             })
                         });
                         const data = await res.json();
-                        if (res.ok) {
+                        if (res.ok && data.status) {
                             this.schemaValidation = {
-                                is_valid: data.is_valid,
+                                is_valid: data.is_valid === true,
                                 errors: data.errors || [],
                                 warnings: data.warnings || []
                             };
@@ -1239,7 +999,7 @@ columns:
                         if (res.ok && data.fixed_yaml) {
                             this.activeYamlContent = data.fixed_yaml;
                             this.schemaValidation = {
-                                is_valid: data.is_valid,
+                                is_valid: data.is_valid === true,
                                 errors: data.errors || [],
                                 warnings: data.warnings || []
                             };
@@ -1307,11 +1067,7 @@ columns:
                         if (res.ok) {
                             await this.fetchStudyInfo();
                             this.$nextTick(() => lucide.createIcons());
-                            
-                            if (confirm(`Successfully ingested ODM XML: ${data.filename} (${data.total_items} items, ${data.subjects_count} subjects).\n\nWould you like AI to auto-generate CDISC SDTM Yamaa schemas from the CRF metadata now?`)) {
-                                this.activeTab = 'specs';
-                                await this.triggerAIDiscovery();
-                            }
+                            this.activeTab = 'specs';
                         } else {
                             alert(`Error uploading file: ${data.detail}`);
                         }
@@ -1319,61 +1075,6 @@ columns:
                         alert('Upload failed: ' + e.message);
                     } finally {
                         this.loading = false;
-                    }
-                },
-
-                async triggerAIDiscovery() {
-                    this.aiGenerating = true;
-                    try {
-                        const res = await fetch('/api/ai/generate_schemas', {
-                            method: 'POST',
-                            headers: {'Content-Type': 'application/json'},
-                            body: JSON.stringify({
-                                provider: this.aiConfig.provider,
-                                api_key: this.aiConfig.apiKey,
-                                model_name: this.aiConfig.modelName
-                            })
-                        });
-                        const data = await res.json();
-                        if (res.ok) {
-                            await this.fetchSpecs();
-                            this.$nextTick(() => lucide.createIcons());
-                            alert(`✨ AI Schema Synthesis Complete!\nProvider: ${data.provider}\n\nGenerated ${data.generated_domains.length} Yamaa SDTM domain schemas:\n${data.generated_domains.join(', ')}`);
-                        } else {
-                            alert(`AI Synthesis failed: ${data.detail}`);
-                        }
-                    } catch (e) {
-                        alert('AI Schema Generation failed: ' + e.message);
-                    } finally {
-                        this.aiGenerating = false;
-                    }
-                },
-
-                async aiRegenerateSingleDomain() {
-                    if (!this.selectedDomain) return;
-                    this.aiGenerating = true;
-                    try {
-                        const res = await fetch(`/api/ai/generate_domain/${this.selectedDomain}`, {
-                            method: 'POST',
-                            headers: {'Content-Type': 'application/json'},
-                            body: JSON.stringify({
-                                provider: this.aiConfig.provider,
-                                api_key: this.aiConfig.apiKey,
-                                model_name: this.aiConfig.modelName
-                            })
-                        });
-                        const data = await res.json();
-                        if (res.ok) {
-                            this.activeYamlContent = data.yaml_content;
-                            await this.fetchSpecs();
-                            alert(`✨ AI Re-synthesized Yamaa Schema for domain ${this.selectedDomain}!`);
-                        } else {
-                            alert(`Error: ${data.detail}`);
-                        }
-                    } catch (e) {
-                        alert('AI regeneration error: ' + e.message);
-                    } finally {
-                        this.aiGenerating = false;
                     }
                 },
 
@@ -1422,20 +1123,47 @@ columns:
                             body: JSON.stringify({
                                 form_mappings: activeMappings,
                                 provider: this.aiConfig.provider,
-                                api_key: this.aiConfig.apiKey,
-                                model_name: this.aiConfig.modelName
+                                apiKey: this.aiConfig.apiKey,
+                                modelName: this.aiConfig.modelName
                             })
                         });
                         const data = await res.json();
                         if (res.ok) {
                             await this.fetchSpecs();
                             this.$nextTick(() => lucide.createIcons());
-                            alert(`✨ AI Schema Synthesis Complete!\n\nGenerated ${data.generated_domains.length} Yamaa SDTM domain schemas:\n${data.generated_domains.join(', ')}`);
                         } else {
                             alert(`AI Synthesis failed: ${data.detail}`);
                         }
                     } catch (e) {
                         alert('AI Schema Generation failed: ' + e.message);
+                    } finally {
+                        this.aiGenerating = false;
+                    }
+                },
+
+                async aiRegenerateSingleDomain() {
+                    if (!this.selectedDomain) return;
+                    this.aiGenerating = true;
+                    try {
+                        const res = await fetch(`/api/ai/generate_domain/${this.selectedDomain}`, {
+                            method: 'POST',
+                            headers: {'Content-Type': 'application/json'},
+                            body: JSON.stringify({
+                                provider: this.aiConfig.provider,
+                                apiKey: this.aiConfig.apiKey,
+                                modelName: this.aiConfig.modelName
+                            })
+                        });
+                        const data = await res.json();
+                        if (res.ok) {
+                            this.activeYamlContent = data.yaml_content;
+                            await this.validateCurrentYaml();
+                            await this.fetchSpecs();
+                        } else {
+                            alert(`Error: ${data.detail}`);
+                        }
+                    } catch (e) {
+                        alert('AI regeneration error: ' + e.message);
                     } finally {
                         this.aiGenerating = false;
                     }
@@ -1458,7 +1186,6 @@ columns:
                         const data = await res.json();
                         if (res.ok) {
                             await this.fetchSpecs();
-                            alert(`Successfully loaded ${data.loaded_domains.length} domain specs: ${data.loaded_domains.join(', ')}`);
                         } else {
                             alert(`Error uploading specs: ${data.detail}`);
                         }
@@ -1473,9 +1200,9 @@ columns:
                         const data = await res.json();
                         this.specsList = data.specs || [];
                         if (this.specsList.length > 0 && !this.selectedDomain) {
-                            this.selectSpec(this.specsList[0].domain);
+                            await this.selectSpec(this.specsList[0].domain);
                         } else if (this.selectedDomain) {
-                            this.selectSpec(this.selectedDomain);
+                            await this.selectSpec(this.selectedDomain);
                         }
                     } catch (e) {
                         console.error('Failed to fetch specs', e);
@@ -1505,6 +1232,7 @@ columns:
                         if (!this.specsList.some(s => s.domain === dUpper)) {
                             this.specsList.push({domain: dUpper, type: templateKey, is_ref: false});
                         }
+                        this.validateCurrentYaml();
                     }
                 },
 
@@ -1522,7 +1250,6 @@ columns:
                         });
                         const data = await res.json();
                         if (res.ok) {
-                            alert(`Yamaa specification for ${this.selectedDomain} saved successfully!`);
                             await this.fetchSpecs();
                         } else {
                             alert(`Error saving spec: ${data.detail}`);
@@ -1536,6 +1263,7 @@ columns:
 
                 async runPipeline() {
                     this.pipelineRunning = true;
+                    this.pipelineLogs = ['Starting Polars transformation engine...', 'Reading EDC ClinicalData...'];
                     try {
                         const res = await fetch('/api/pipeline/run', {
                             method: 'POST',
@@ -1544,16 +1272,16 @@ columns:
                         });
                         const data = await res.json();
                         if (res.ok) {
-                            this.pipelineResults = data.datasets || [];
+                            this.pipelineResults = data.results || [];
                             this.generatedDomains = this.pipelineResults.map(r => r.domain);
-                            if (this.generatedDomains.length > 0) {
+                            if (this.generatedDomains.length > 0 && !this.viewerDomain) {
                                 this.viewerDomain = this.generatedDomains[0];
                             }
-                            await this.fetchVerifications();
-                            this.$nextTick(() => lucide.createIcons());
-                            alert(`SDTM Pipeline completed! Generated ${this.pipelineResults.length} domains.`);
+                            this.verificationReports = data.verifications || {};
+                            this.pipelineLogs.push('Completed transformation of ' + this.pipelineResults.length + ' SDTM domains.');
+                            this.pipelineLogs.push('All verifications evaluated.');
                         } else {
-                            alert(`Pipeline error: ${data.detail}`);
+                            alert(`Pipeline build failed: ${data.detail}`);
                         }
                     } catch (e) {
                         alert('Pipeline execution failed: ' + e.message);
@@ -1565,16 +1293,10 @@ columns:
                 async viewDomainData(domain) {
                     this.viewerDomain = domain;
                     this.activeTab = 'viewer';
-                    await this.fetchViewerData();
+                    await this.fetchDomainData();
                 },
 
-                async selectViewerDomain(domain) {
-                    this.viewerDomain = domain;
-                    this.viewerPage = 1;
-                    await this.fetchViewerData();
-                },
-
-                async fetchViewerData() {
+                async fetchDomainData() {
                     if (!this.viewerDomain) return;
                     try {
                         const q = new URLSearchParams({
@@ -1589,27 +1311,12 @@ columns:
                         this.viewerDtypes = data.dtypes || {};
                         this.viewerTotal = data.total || 0;
                     } catch (e) {
-                        console.error('Failed to fetch dataset data', e);
+                        console.error('Failed to fetch domain data', e);
                     }
                 },
 
-                async fetchVerifications() {
-                    try {
-                        const res = await fetch('/api/verifications');
-                        const data = await res.json();
-                        const all = [];
-                        for (const d in data.verifications) {
-                            const checks = data.verifications[d].checks || [];
-                            all.push(...checks);
-                        }
-                        this.allVerifications = all;
-                    } catch (e) {
-                        console.error('Failed to fetch verifications', e);
-                    }
-                },
-
-                downloadDomainFile(domain, fmt) {
-                    window.location.href = `/api/export/${domain}/${fmt}`;
+                downloadDomainFile(domain, format) {
+                    window.location.href = `/api/download/${domain}/${format}`;
                 }
             }
         }
