@@ -95,3 +95,96 @@ async def api_synthesize_tdm(req: SynthesizeTDMRequest):
         "message": f"Successfully synthesized {len(domain_list)} CDISC TDM domains: {', '.join(domain_list)}"
     }
 
+
+class GenerateDocRequest(BaseModel):
+    design_id: str
+    custom_params: Optional[Dict[str, Any]] = None
+    sample_size_params: Optional[Dict[str, Any]] = None
+    provider: Optional[str] = "auto"
+    api_key: Optional[str] = None
+    model: Optional[str] = None
+    custom_prompt: Optional[str] = None
+
+
+@router.post("/generate_protocol")
+async def api_generate_protocol(req: GenerateDocRequest):
+    """Generates an ICH GCP E6 (R2) Clinical Trial Protocol Document."""
+    from ...protocol_sap_generator import ProtocolSAPGenerator
+    
+    design = get_design_by_id(req.design_id)
+    if not design:
+        raise HTTPException(status_code=404, detail=f"Study design '{req.design_id}' not found")
+    
+    # Merge custom parameters if provided
+    design_data = dict(design)
+    if req.custom_params:
+        design_data.update(req.custom_params)
+        
+    sample_size_res = req.sample_size_params
+    if not sample_size_res:
+        try:
+            # Auto-calculate default sample size if not provided
+            def_p = design.get("default_params", {})
+            ss_req = SampleSizeRequest(
+                design_id=req.design_id,
+                endpoint_type=design.get("endpoint_type", "continuous"),
+                hypothesis=design.get("hypothesis_type", "superiority"),
+                **def_p
+            )
+            sample_size_res = calculate_sample_size(ss_req)
+        except Exception:
+            sample_size_res = {}
+
+    gen = ProtocolSAPGenerator(
+        provider=req.provider or "auto",
+        api_key=req.api_key,
+        model_name=req.model
+    )
+    result = gen.generate_protocol(
+        design=design_data,
+        sample_size=sample_size_res,
+        custom_prompt=req.custom_prompt
+    )
+    return result
+
+
+@router.post("/generate_sap")
+async def api_generate_sap(req: GenerateDocRequest):
+    """Generates an ICH E9 / E9(R1) Statistical Analysis Plan (SAP)."""
+    from ...protocol_sap_generator import ProtocolSAPGenerator
+    
+    design = get_design_by_id(req.design_id)
+    if not design:
+        raise HTTPException(status_code=404, detail=f"Study design '{req.design_id}' not found")
+    
+    design_data = dict(design)
+    if req.custom_params:
+        design_data.update(req.custom_params)
+        
+    sample_size_res = req.sample_size_params
+    if not sample_size_res:
+        try:
+            def_p = design.get("default_params", {})
+            ss_req = SampleSizeRequest(
+                design_id=req.design_id,
+                endpoint_type=design.get("endpoint_type", "continuous"),
+                hypothesis=design.get("hypothesis_type", "superiority"),
+                **def_p
+            )
+            sample_size_res = calculate_sample_size(ss_req)
+        except Exception:
+            sample_size_res = {}
+
+    gen = ProtocolSAPGenerator(
+        provider=req.provider or "auto",
+        api_key=req.api_key,
+        model_name=req.model
+    )
+    result = gen.generate_sap(
+        design=design_data,
+        sample_size=sample_size_res,
+        custom_prompt=req.custom_prompt
+    )
+    return result
+
+
