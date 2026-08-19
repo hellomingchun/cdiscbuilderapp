@@ -417,13 +417,29 @@
                         <textarea x-model="activeYamlContent" class="w-full h-full bg-slate-900 text-slate-100 p-4 rounded-lg font-mono text-xs leading-relaxed border border-slate-800 focus:outline-none focus:border-blue-500 resize-none code-editor" spellcheck="false" placeholder="# Click '✨ AI Auto-Generate' above, pick a template on the left, or upload YAML files to begin authoring"></textarea>
                     </div>
 
-                    <!-- Footer Status -->
-                    <div class="pt-2.5 mt-2 border-t border-slate-800/80 flex justify-between items-center text-[11px] text-slate-400">
+                    <!-- Footer Status with Real-Time Schema Validator -->
+                    <div class="pt-2.5 mt-2 border-t border-slate-800/80 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 text-[11px]">
                         <div class="flex items-center gap-2">
-                            <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
-                            <span>Yamaa Derivations, Row SQL Filters &amp; Verifications Active</span>
+                            <template x-if="schemaValidation.is_valid">
+                                <span class="inline-flex items-center gap-1 text-emerald-400 bg-emerald-950/40 border border-emerald-500/30 px-2 py-0.5 rounded font-medium">
+                                    <i data-lucide="check-circle" class="w-3 h-3 text-emerald-400"></i>
+                                    <span>Valid Yamaa Specification (v1.0 Standard)</span>
+                                </span>
+                            </template>
+                            <template x-if="!schemaValidation.is_valid && schemaValidation.errors.length > 0">
+                                <span class="inline-flex items-center gap-1 text-red-400 bg-red-950/40 border border-red-500/30 px-2 py-0.5 rounded font-medium truncate max-w-md" :title="schemaValidation.errors.join('\n')">
+                                    <i data-lucide="alert-circle" class="w-3 h-3 text-red-400"></i>
+                                    <span x-text="`Invalid: ${schemaValidation.errors[0]}`"></span>
+                                </span>
+                            </template>
+                            <template x-if="schemaValidation.warnings.length > 0">
+                                <span class="inline-flex items-center gap-1 text-amber-400 bg-amber-950/40 border border-amber-500/30 px-2 py-0.5 rounded font-medium" :title="schemaValidation.warnings.join('\n')">
+                                    <i data-lucide="alert-triangle" class="w-3 h-3 text-amber-400"></i>
+                                    <span x-text="`${schemaValidation.warnings.length} Schema Warning(s)`"></span>
+                                </span>
+                            </template>
                         </div>
-                        <span x-text="`Lines: ${activeYamlContent.split('\n').length}`"></span>
+                        <span class="text-slate-400 font-mono" x-text="`Lines: ${activeYamlContent ? activeYamlContent.split('\n').length : 0}`"></span>
                     </div>
                 </div>
             </div>
@@ -828,6 +844,7 @@
                 specsList: [],
                 selectedDomain: '',
                 activeYamlContent: '',
+                schemaValidation: { is_valid: true, errors: [], warnings: [] },
 
                 // Pipeline Results
                 pipelineResults: [],
@@ -1128,12 +1145,49 @@ columns:
                     await this.fetchStudyInfo();
                     await this.fetchSpecs();
                     await this.fetchCRFForms();
+                    
+                    let valTimer = null;
+                    this.$watch('activeYamlContent', (newVal) => {
+                        clearTimeout(valTimer);
+                        valTimer = setTimeout(() => {
+                            this.validateCurrentYaml();
+                        }, 350);
+                    });
+
                     this.$watch('activeTab', (tab) => {
                         if (tab === 'specs') {
                             this.fetchCRFForms();
+                            this.validateCurrentYaml();
                         }
                         this.$nextTick(() => lucide.createIcons());
                     });
+                },
+
+                async validateCurrentYaml() {
+                    if (!this.activeYamlContent || !this.activeYamlContent.trim()) {
+                        this.schemaValidation = { is_valid: true, errors: [], warnings: [] };
+                        return;
+                    }
+                    try {
+                        const res = await fetch('/api/specs/validate', {
+                            method: 'POST',
+                            headers: {'Content-Type': 'application/json'},
+                            body: JSON.stringify({
+                                domain: this.selectedDomain || 'UNKNOWN',
+                                yaml_content: this.activeYamlContent
+                            })
+                        });
+                        const data = await res.json();
+                        if (res.ok) {
+                            this.schemaValidation = {
+                                is_valid: data.is_valid,
+                                errors: data.errors || [],
+                                warnings: data.warnings || []
+                            };
+                        }
+                    } catch (e) {
+                        console.error('Validation failed', e);
+                    }
                 },
 
                 async fetchStudyInfo() {

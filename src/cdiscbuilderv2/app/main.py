@@ -27,6 +27,7 @@ from ..ai_generator import AISDTMSchemaGenerator
 from ..engine import CDISCEngine
 from ..odm_parser import ODMParser
 from ..pipeline import SDTMPipeline
+from ..validator import YamaaSchemaValidator
 from ..verifications import VerificationEngine
 
 logging.basicConfig(level=logging.INFO)
@@ -512,6 +513,20 @@ async def update_spec(domain: str, req: SpecUpdateRequest):
         return {"status": "SUCCESS", "domain": domain}
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Invalid YAML content: {str(e)}")
+
+
+@app.post("/api/specs/validate")
+async def validate_yaml_spec(req: SpecUpdateRequest):
+    """Validates a Yamaa YAML specification string in real-time."""
+    validator = YamaaSchemaValidator(req.yaml_content)
+    is_valid, errors, warnings = validator.validate()
+    return {
+        "status": "VALID" if is_valid else "INVALID",
+        "is_valid": is_valid,
+        "errors": errors,
+        "warnings": warnings,
+        "domain": validator.spec.get("domain") if validator.spec else None
+    }
 
 
 @app.post("/api/specs_upload")

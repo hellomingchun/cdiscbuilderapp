@@ -26,6 +26,8 @@ class SQLParser:
             return pl.lit(True)
 
         expr, remaining = SQLParser._parse_or(tokens, schema)
+        if remaining:
+            raise ValueError(f"Syntax error in SQL expression near: {' '.join(remaining)}")
         return expr
 
     @staticmethod
