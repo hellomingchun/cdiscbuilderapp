@@ -369,6 +369,43 @@ class ExpressionParser:
             expr = chain.otherwise(pl.lit(value.get("missing", None)))
             return expr
 
+        # --- Medical Coding Expressions ---
+        if key == "meddra_decode":
+            src = value.get("source", value) if isinstance(value, dict) else value
+            src_expr = self._parse_expression(src, schema).cast(pl.Utf8, strict=False)
+            from .medical_coder import MEDDRA_CODER
+            return src_expr.map_elements(lambda x: MEDDRA_CODER.code_term(x).pt if x else None, return_dtype=pl.Utf8)
+
+        if key == "meddra_soc":
+            src = value.get("source", value) if isinstance(value, dict) else value
+            src_expr = self._parse_expression(src, schema).cast(pl.Utf8, strict=False)
+            from .medical_coder import MEDDRA_CODER
+            return src_expr.map_elements(lambda x: MEDDRA_CODER.code_term(x).soc if x else None, return_dtype=pl.Utf8)
+
+        if key == "meddra_ptcd":
+            src = value.get("source", value) if isinstance(value, dict) else value
+            src_expr = self._parse_expression(src, schema).cast(pl.Utf8, strict=False)
+            from .medical_coder import MEDDRA_CODER
+            return src_expr.map_elements(lambda x: MEDDRA_CODER.code_term(x).pt_code if x else None, return_dtype=pl.Utf8)
+
+        if key == "whodrug_decode":
+            src = value.get("source", value) if isinstance(value, dict) else value
+            src_expr = self._parse_expression(src, schema).cast(pl.Utf8, strict=False)
+            from .medical_coder import WHO_DRUG_CODER
+            return src_expr.map_elements(lambda x: WHO_DRUG_CODER.code_term(x).preferred_name if x else None, return_dtype=pl.Utf8)
+
+        if key == "whodrug_class":
+            src = value.get("source", value) if isinstance(value, dict) else value
+            src_expr = self._parse_expression(src, schema).cast(pl.Utf8, strict=False)
+            from .medical_coder import WHO_DRUG_CODER
+            return src_expr.map_elements(lambda x: WHO_DRUG_CODER.code_term(x).therapeutic_class if x else None, return_dtype=pl.Utf8)
+
+        if key == "whodrug_atc":
+            src = value.get("source", value) if isinstance(value, dict) else value
+            src_expr = self._parse_expression(src, schema).cast(pl.Utf8, strict=False)
+            from .medical_coder import WHO_DRUG_CODER
+            return src_expr.map_elements(lambda x: WHO_DRUG_CODER.code_term(x).atc_code if x else None, return_dtype=pl.Utf8)
+
         # --- Custom Function Calling ---
         if key in ("function", "function_"):
             func_name = value.get("name", value) if isinstance(value, dict) else value
@@ -376,6 +413,22 @@ class ExpressionParser:
 
             if func_name in ("calculate_study_day", "calc_study_day"):
                 return self._parse_expression({"calculate_study_day": {"args": args}}, schema)
+
+            if func_name in ("meddra_decode", "meddra_pt"):
+                arg = args[0] if args else "AETERM"
+                return self._parse_expression({"meddra_decode": {"source": arg}}, schema)
+
+            if func_name in ("meddra_soc", "meddra_bodsys"):
+                arg = args[0] if args else "AETERM"
+                return self._parse_expression({"meddra_soc": {"source": arg}}, schema)
+
+            if func_name in ("whodrug_decode", "whodrug_pt"):
+                arg = args[0] if args else "CMTRT"
+                return self._parse_expression({"whodrug_decode": {"source": arg}}, schema)
+
+            if func_name in ("whodrug_class", "whodrug_clas"):
+                arg = args[0] if args else "CMTRT"
+                return self._parse_expression({"whodrug_class": {"source": arg}}, schema)
 
             if func_name in self.custom_functions:
                 return self.custom_functions[func_name](self, args, schema)

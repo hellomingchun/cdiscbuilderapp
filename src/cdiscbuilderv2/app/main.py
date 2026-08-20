@@ -18,7 +18,8 @@ from .routers import (
     pipeline,
     datasets,
     verifications,
-    export
+    export,
+    coding
 )
 
 logging.basicConfig(level=logging.INFO)
@@ -47,6 +48,7 @@ app.include_router(pipeline.router)
 app.include_router(datasets.router)
 app.include_router(verifications.router)
 app.include_router(export.router)
+app.include_router(coding.router)
 
 # Static Files & SPA Frontend
 STATIC_DIR = Path(__file__).parent / "static"
