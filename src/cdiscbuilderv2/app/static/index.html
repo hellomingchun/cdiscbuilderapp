@@ -187,61 +187,211 @@
       </button>
     </div>
     <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-      <div><label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">Protocol ID</label><input x-model="designConfig.protocol_id" type="text" placeholder="e.g. STUDY-001" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-forge-500"></div>
-      <div><label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">Hypothesis Type</label><select x-model="designConfig.hypothesis_type" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-forge-500"><option value="superiority">Superiority</option><option value="non_inferiority">Non-Inferiority</option><option value="equivalence">Equivalence</option><option value="single_arm">Single-Arm / Benchmark</option></select></div>
-      <div><label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">Primary Endpoint Type</label><select x-model="designConfig.endpoint_type" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-forge-500"><option value="continuous">Continuous (ANCOVA/MMRM)</option><option value="binary">Binary / Proportion (FM)</option><option value="survival">Time-to-Event (Schoenfeld)</option><option value="diagnostic">Diagnostic Accuracy (Buderer)</option><option value="simon">Simon's 2-Stage Phase II</option><option value="cluster">Cluster Randomized (CRT/ICC)</option><option value="vaccine">Vaccine Efficacy (Poisson)</option><option value="dose_escalation">Dose Escalation (3+3)</option><option value="factorial">Factorial 2x2</option></select></div>
-      <div><label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">Alpha (Significance Level)</label><select x-model="designConfig.alpha" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-forge-500"><option value="0.05">0.05 (Standard)</option><option value="0.025">0.025 (1-sided / Conservative)</option><option value="0.01">0.01 (Stringent)</option></select></div>
-      <div><label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">Statistical Power</label><select x-model="designConfig.power" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-forge-500"><option value="0.80">80%</option><option value="0.85">85%</option><option value="0.90">90%</option><option value="0.95">95%</option></select></div>
-      <div><label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">Allocation Ratio</label><select x-model="designConfig.allocation_ratio" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-forge-500"><option value="1">1:1</option><option value="2">2:1</option><option value="3">3:1</option></select></div>
-      <div><label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">Anticipated Dropout Rate</label><select x-model="designConfig.dropout_rate" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-forge-500"><option value="0.0">0% (None)</option><option value="0.05">5%</option><option value="0.10">10%</option><option value="0.15">15%</option><option value="0.20">20%</option></select></div>
+      <div>
+        <label class="flex items-center text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">
+          <span>Protocol ID</span>
+          <button type="button" @click.stop="openParamHelp('protocol_id')" title="Explain Protocol ID" class="w-3.5 h-3.5 rounded-full bg-slate-200 dark:bg-slate-700 hover:bg-clinical-500 hover:text-white text-slate-500 dark:text-slate-400 inline-flex items-center justify-center text-[10px] font-bold font-mono transition ml-1 cursor-pointer">?</button>
+        </label>
+        <input x-model="designConfig.protocol_id" type="text" placeholder="e.g. STUDY-001" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-forge-500">
+      </div>
+      <div>
+        <label class="flex items-center text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">
+          <span>Hypothesis Type</span>
+          <button type="button" @click.stop="openParamHelp('hypothesis_type')" title="Explain Hypothesis Type" class="w-3.5 h-3.5 rounded-full bg-slate-200 dark:bg-slate-700 hover:bg-clinical-500 hover:text-white text-slate-500 dark:text-slate-400 inline-flex items-center justify-center text-[10px] font-bold font-mono transition ml-1 cursor-pointer">?</button>
+        </label>
+        <select x-model="designConfig.hypothesis_type" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-forge-500"><option value="superiority">Superiority</option><option value="non_inferiority">Non-Inferiority</option><option value="equivalence">Equivalence</option><option value="single_arm">Single-Arm / Benchmark</option></select>
+      </div>
+      <div>
+        <label class="flex items-center text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">
+          <span>Primary Endpoint Type</span>
+          <button type="button" @click.stop="openParamHelp('endpoint_type')" title="Explain Primary Endpoint Type" class="w-3.5 h-3.5 rounded-full bg-slate-200 dark:bg-slate-700 hover:bg-clinical-500 hover:text-white text-slate-500 dark:text-slate-400 inline-flex items-center justify-center text-[10px] font-bold font-mono transition ml-1 cursor-pointer">?</button>
+        </label>
+        <select x-model="designConfig.endpoint_type" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-forge-500"><option value="continuous">Continuous (ANCOVA/MMRM)</option><option value="binary">Binary / Proportion (FM)</option><option value="survival">Time-to-Event (Schoenfeld)</option><option value="diagnostic">Diagnostic Accuracy (Buderer)</option><option value="simon">Simon's 2-Stage Phase II</option><option value="cluster">Cluster Randomized (CRT/ICC)</option><option value="vaccine">Vaccine Efficacy (Poisson)</option><option value="dose_escalation">Dose Escalation (3+3)</option><option value="factorial">Factorial 2x2</option></select>
+      </div>
+      <div>
+        <label class="flex items-center text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">
+          <span>Alpha (Significance Level)</span>
+          <button type="button" @click.stop="openParamHelp('alpha')" title="Explain Alpha Significance Level" class="w-3.5 h-3.5 rounded-full bg-slate-200 dark:bg-slate-700 hover:bg-clinical-500 hover:text-white text-slate-500 dark:text-slate-400 inline-flex items-center justify-center text-[10px] font-bold font-mono transition ml-1 cursor-pointer">?</button>
+        </label>
+        <select x-model="designConfig.alpha" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-forge-500"><option value="0.05">0.05 (Standard)</option><option value="0.025">0.025 (1-sided / Conservative)</option><option value="0.01">0.01 (Stringent)</option></select>
+      </div>
+      <div>
+        <label class="flex items-center text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">
+          <span>Statistical Power (1 - Beta)</span>
+          <button type="button" @click.stop="openParamHelp('power')" title="Explain Statistical Power" class="w-3.5 h-3.5 rounded-full bg-slate-200 dark:bg-slate-700 hover:bg-clinical-500 hover:text-white text-slate-500 dark:text-slate-400 inline-flex items-center justify-center text-[10px] font-bold font-mono transition ml-1 cursor-pointer">?</button>
+        </label>
+        <select x-model="designConfig.power" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-forge-500"><option value="0.80">80%</option><option value="0.85">85%</option><option value="0.90">90%</option><option value="0.95">95%</option></select>
+      </div>
+      <div>
+        <label class="flex items-center text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">
+          <span>Allocation Ratio</span>
+          <button type="button" @click.stop="openParamHelp('allocation_ratio')" title="Explain Allocation Ratio" class="w-3.5 h-3.5 rounded-full bg-slate-200 dark:bg-slate-700 hover:bg-clinical-500 hover:text-white text-slate-500 dark:text-slate-400 inline-flex items-center justify-center text-[10px] font-bold font-mono transition ml-1 cursor-pointer">?</button>
+        </label>
+        <select x-model="designConfig.allocation_ratio" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-forge-500"><option value="1">1:1</option><option value="2">2:1</option><option value="3">3:1</option></select>
+      </div>
+      <div>
+        <label class="flex items-center text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">
+          <span>Anticipated Dropout Rate</span>
+          <button type="button" @click.stop="openParamHelp('dropout_rate')" title="Explain Dropout Rate" class="w-3.5 h-3.5 rounded-full bg-slate-200 dark:bg-slate-700 hover:bg-clinical-500 hover:text-white text-slate-500 dark:text-slate-400 inline-flex items-center justify-center text-[10px] font-bold font-mono transition ml-1 cursor-pointer">?</button>
+        </label>
+        <select x-model="designConfig.dropout_rate" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-forge-500"><option value="0.0">0% (None)</option><option value="0.05">5%</option><option value="0.10">10%</option><option value="0.15">15%</option><option value="0.20">20%</option></select>
+      </div>
     </div>
     <div class="border-t border-slate-100 dark:border-slate-800 pt-4">
       <p class="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-3">Endpoint Parameters</p>
       <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
         <template x-if="designConfig.endpoint_type==='continuous'">
           <div class="contents">
-            <div><label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">Mean Ctrl</label><input x-model.number="designConfig.mean_control" type="number" step="0.1" placeholder="e.g. 10" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-forge-500"></div>
-            <div><label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">Mean Trt</label><input x-model.number="designConfig.mean_treatment" type="number" step="0.1" placeholder="e.g. 14" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-forge-500"></div>
-            <div><label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">SD (Pooled)</label><input x-model.number="designConfig.sd_pooled" type="number" step="0.1" placeholder="e.g. 8" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-forge-500"></div>
-            <div><label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">Delta Margin</label><input x-model.number="designConfig.delta_margin" type="number" step="0.1" placeholder="e.g. 2" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-forge-500"></div>
+            <div>
+              <label class="flex items-center text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">
+                <span>Mean Ctrl</span>
+                <button type="button" @click.stop="openParamHelp('mean_control')" title="Explain Mean Ctrl" class="w-3.5 h-3.5 rounded-full bg-slate-200 dark:bg-slate-700 hover:bg-clinical-500 hover:text-white text-slate-500 dark:text-slate-400 inline-flex items-center justify-center text-[10px] font-bold font-mono transition ml-1 cursor-pointer">?</button>
+              </label>
+              <input x-model.number="designConfig.mean_control" type="number" step="0.1" placeholder="e.g. 10" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-forge-500">
+            </div>
+            <div>
+              <label class="flex items-center text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">
+                <span>Mean Trt</span>
+                <button type="button" @click.stop="openParamHelp('mean_treatment')" title="Explain Mean Trt" class="w-3.5 h-3.5 rounded-full bg-slate-200 dark:bg-slate-700 hover:bg-clinical-500 hover:text-white text-slate-500 dark:text-slate-400 inline-flex items-center justify-center text-[10px] font-bold font-mono transition ml-1 cursor-pointer">?</button>
+              </label>
+              <input x-model.number="designConfig.mean_treatment" type="number" step="0.1" placeholder="e.g. 14" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-forge-500">
+            </div>
+            <div>
+              <label class="flex items-center text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">
+                <span>SD (Pooled)</span>
+                <button type="button" @click.stop="openParamHelp('sd_pooled')" title="Explain Pooled SD" class="w-3.5 h-3.5 rounded-full bg-slate-200 dark:bg-slate-700 hover:bg-clinical-500 hover:text-white text-slate-500 dark:text-slate-400 inline-flex items-center justify-center text-[10px] font-bold font-mono transition ml-1 cursor-pointer">?</button>
+              </label>
+              <input x-model.number="designConfig.sd_pooled" type="number" step="0.1" placeholder="e.g. 8" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-forge-500">
+            </div>
+            <div>
+              <label class="flex items-center text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">
+                <span>Delta Margin</span>
+                <button type="button" @click.stop="openParamHelp('delta_margin')" title="Explain Delta Margin" class="w-3.5 h-3.5 rounded-full bg-slate-200 dark:bg-slate-700 hover:bg-clinical-500 hover:text-white text-slate-500 dark:text-slate-400 inline-flex items-center justify-center text-[10px] font-bold font-mono transition ml-1 cursor-pointer">?</button>
+              </label>
+              <input x-model.number="designConfig.delta_margin" type="number" step="0.1" placeholder="e.g. 2" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-forge-500">
+            </div>
           </div>
         </template>
         <template x-if="designConfig.endpoint_type==='binary'">
           <div class="contents">
-            <div><label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">Response Rate (Trt)</label><input x-model.number="designConfig.prop_treatment" type="number" step="0.01" min="0" max="1" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-forge-500"></div>
-            <div><label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">Response Rate (Ctrl)</label><input x-model.number="designConfig.prop_control" type="number" step="0.01" min="0" max="1" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-forge-500"></div>
-            <div><label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">NI Delta Margin</label><input x-model.number="designConfig.delta_margin" type="number" step="0.01" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-forge-500"></div>
+            <div>
+              <label class="flex items-center text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">
+                <span>Response Rate (Trt)</span>
+                <button type="button" @click.stop="openParamHelp('prop_treatment')" title="Explain Response Rate (Trt)" class="w-3.5 h-3.5 rounded-full bg-slate-200 dark:bg-slate-700 hover:bg-clinical-500 hover:text-white text-slate-500 dark:text-slate-400 inline-flex items-center justify-center text-[10px] font-bold font-mono transition ml-1 cursor-pointer">?</button>
+              </label>
+              <input x-model.number="designConfig.prop_treatment" type="number" step="0.01" min="0" max="1" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-forge-500">
+            </div>
+            <div>
+              <label class="flex items-center text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">
+                <span>Response Rate (Ctrl)</span>
+                <button type="button" @click.stop="openParamHelp('prop_control')" title="Explain Response Rate (Ctrl)" class="w-3.5 h-3.5 rounded-full bg-slate-200 dark:bg-slate-700 hover:bg-clinical-500 hover:text-white text-slate-500 dark:text-slate-400 inline-flex items-center justify-center text-[10px] font-bold font-mono transition ml-1 cursor-pointer">?</button>
+              </label>
+              <input x-model.number="designConfig.prop_control" type="number" step="0.01" min="0" max="1" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-forge-500">
+            </div>
+            <div>
+              <label class="flex items-center text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">
+                <span>NI Delta Margin</span>
+                <button type="button" @click.stop="openParamHelp('delta_margin')" title="Explain NI Delta Margin" class="w-3.5 h-3.5 rounded-full bg-slate-200 dark:bg-slate-700 hover:bg-clinical-500 hover:text-white text-slate-500 dark:text-slate-400 inline-flex items-center justify-center text-[10px] font-bold font-mono transition ml-1 cursor-pointer">?</button>
+              </label>
+              <input x-model.number="designConfig.delta_margin" type="number" step="0.01" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-forge-500">
+            </div>
           </div>
         </template>
         <template x-if="designConfig.endpoint_type==='survival'">
           <div class="contents">
-            <div><label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">Hazard Ratio (HR)</label><input x-model.number="designConfig.hazard_ratio" type="number" step="0.01" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-forge-500"></div>
-            <div><label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">Ctrl Event Rate</label><input x-model.number="designConfig.event_rate_control" type="number" step="0.01" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-forge-500"></div>
+            <div>
+              <label class="flex items-center text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">
+                <span>Hazard Ratio (HR)</span>
+                <button type="button" @click.stop="openParamHelp('hazard_ratio')" title="Explain Hazard Ratio" class="w-3.5 h-3.5 rounded-full bg-slate-200 dark:bg-slate-700 hover:bg-clinical-500 hover:text-white text-slate-500 dark:text-slate-400 inline-flex items-center justify-center text-[10px] font-bold font-mono transition ml-1 cursor-pointer">?</button>
+              </label>
+              <input x-model.number="designConfig.hazard_ratio" type="number" step="0.01" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-forge-500">
+            </div>
+            <div>
+              <label class="flex items-center text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">
+                <span>Ctrl Event Rate</span>
+                <button type="button" @click.stop="openParamHelp('event_rate_control')" title="Explain Control Event Rate" class="w-3.5 h-3.5 rounded-full bg-slate-200 dark:bg-slate-700 hover:bg-clinical-500 hover:text-white text-slate-500 dark:text-slate-400 inline-flex items-center justify-center text-[10px] font-bold font-mono transition ml-1 cursor-pointer">?</button>
+              </label>
+              <input x-model.number="designConfig.event_rate_control" type="number" step="0.01" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-forge-500">
+            </div>
           </div>
         </template>
         <template x-if="designConfig.endpoint_type==='diagnostic'">
           <div class="contents">
-            <div><label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">Expected Sensitivity</label><input x-model.number="designConfig.sensitivity" type="number" step="0.01" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-forge-500"></div>
-            <div><label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">Prevalence</label><input x-model.number="designConfig.prevalence" type="number" step="0.01" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-forge-500"></div>
-            <div><label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">CI Half-Width (W)</label><input x-model.number="designConfig.ci_half_width" type="number" step="0.01" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-forge-500"></div>
+            <div>
+              <label class="flex items-center text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">
+                <span>Expected Sensitivity</span>
+                <button type="button" @click.stop="openParamHelp('sensitivity')" title="Explain Sensitivity" class="w-3.5 h-3.5 rounded-full bg-slate-200 dark:bg-slate-700 hover:bg-clinical-500 hover:text-white text-slate-500 dark:text-slate-400 inline-flex items-center justify-center text-[10px] font-bold font-mono transition ml-1 cursor-pointer">?</button>
+              </label>
+              <input x-model.number="designConfig.sensitivity" type="number" step="0.01" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-forge-500">
+            </div>
+            <div>
+              <label class="flex items-center text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">
+                <span>Prevalence</span>
+                <button type="button" @click.stop="openParamHelp('prevalence')" title="Explain Prevalence" class="w-3.5 h-3.5 rounded-full bg-slate-200 dark:bg-slate-700 hover:bg-clinical-500 hover:text-white text-slate-500 dark:text-slate-400 inline-flex items-center justify-center text-[10px] font-bold font-mono transition ml-1 cursor-pointer">?</button>
+              </label>
+              <input x-model.number="designConfig.prevalence" type="number" step="0.01" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-forge-500">
+            </div>
+            <div>
+              <label class="flex items-center text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">
+                <span>CI Half-Width (W)</span>
+                <button type="button" @click.stop="openParamHelp('ci_half_width')" title="Explain CI Half-Width" class="w-3.5 h-3.5 rounded-full bg-slate-200 dark:bg-slate-700 hover:bg-clinical-500 hover:text-white text-slate-500 dark:text-slate-400 inline-flex items-center justify-center text-[10px] font-bold font-mono transition ml-1 cursor-pointer">?</button>
+              </label>
+              <input x-model.number="designConfig.ci_half_width" type="number" step="0.01" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-forge-500">
+            </div>
           </div>
         </template>
         <template x-if="designConfig.endpoint_type==='cluster'">
           <div class="contents">
-            <div><label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">Cluster Size (m)</label><input x-model.number="designConfig.cluster_size" type="number" step="1" placeholder="e.g. 30" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-forge-500"></div>
-            <div><label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">Intraclass Corr (ICC)</label><input x-model.number="designConfig.icc" type="number" step="0.005" placeholder="e.g. 0.02" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-forge-500"></div>
+            <div>
+              <label class="flex items-center text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">
+                <span>Cluster Size (m)</span>
+                <button type="button" @click.stop="openParamHelp('cluster_size')" title="Explain Cluster Size" class="w-3.5 h-3.5 rounded-full bg-slate-200 dark:bg-slate-700 hover:bg-clinical-500 hover:text-white text-slate-500 dark:text-slate-400 inline-flex items-center justify-center text-[10px] font-bold font-mono transition ml-1 cursor-pointer">?</button>
+              </label>
+              <input x-model.number="designConfig.cluster_size" type="number" step="1" placeholder="e.g. 30" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-forge-500">
+            </div>
+            <div>
+              <label class="flex items-center text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">
+                <span>Intraclass Corr (ICC)</span>
+                <button type="button" @click.stop="openParamHelp('icc')" title="Explain Intraclass Correlation (ICC)" class="w-3.5 h-3.5 rounded-full bg-slate-200 dark:bg-slate-700 hover:bg-clinical-500 hover:text-white text-slate-500 dark:text-slate-400 inline-flex items-center justify-center text-[10px] font-bold font-mono transition ml-1 cursor-pointer">?</button>
+              </label>
+              <input x-model.number="designConfig.icc" type="number" step="0.005" placeholder="e.g. 0.02" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-forge-500">
+            </div>
           </div>
         </template>
         <template x-if="designConfig.endpoint_type==='vaccine'">
           <div class="contents">
-            <div><label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">Target VE (e.g. 0.75)</label><input x-model.number="designConfig.vaccine_efficacy" type="number" step="0.05" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-forge-500"></div>
-            <div><label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">Null VE Margin</label><input x-model.number="designConfig.null_ve" type="number" step="0.05" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-forge-500"></div>
+            <div>
+              <label class="flex items-center text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">
+                <span>Target VE (e.g. 0.75)</span>
+                <button type="button" @click.stop="openParamHelp('vaccine_efficacy')" title="Explain Target Vaccine Efficacy" class="w-3.5 h-3.5 rounded-full bg-slate-200 dark:bg-slate-700 hover:bg-clinical-500 hover:text-white text-slate-500 dark:text-slate-400 inline-flex items-center justify-center text-[10px] font-bold font-mono transition ml-1 cursor-pointer">?</button>
+              </label>
+              <input x-model.number="designConfig.vaccine_efficacy" type="number" step="0.05" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-forge-500">
+            </div>
+            <div>
+              <label class="flex items-center text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">
+                <span>Null VE Margin</span>
+                <button type="button" @click.stop="openParamHelp('null_ve')" title="Explain Null VE Margin" class="w-3.5 h-3.5 rounded-full bg-slate-200 dark:bg-slate-700 hover:bg-clinical-500 hover:text-white text-slate-500 dark:text-slate-400 inline-flex items-center justify-center text-[10px] font-bold font-mono transition ml-1 cursor-pointer">?</button>
+              </label>
+              <input x-model.number="designConfig.null_ve" type="number" step="0.05" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-forge-500">
+            </div>
           </div>
         </template>
         <template x-if="designConfig.endpoint_type==='dose_escalation'">
           <div class="contents">
-            <div><label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">Dose Levels</label><input x-model.number="designConfig.dose_levels" type="number" step="1" min="2" max="10" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-forge-500"></div>
-            <div><label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">Cohort Size</label><input x-model.number="designConfig.cohort_size" type="number" step="1" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-forge-500"></div>
+            <div>
+              <label class="flex items-center text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">
+                <span>Dose Levels</span>
+                <button type="button" @click.stop="openParamHelp('dose_levels')" title="Explain Dose Levels" class="w-3.5 h-3.5 rounded-full bg-slate-200 dark:bg-slate-700 hover:bg-clinical-500 hover:text-white text-slate-500 dark:text-slate-400 inline-flex items-center justify-center text-[10px] font-bold font-mono transition ml-1 cursor-pointer">?</button>
+              </label>
+              <input x-model.number="designConfig.dose_levels" type="number" step="1" min="2" max="10" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-forge-500">
+            </div>
+            <div>
+              <label class="flex items-center text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">
+                <span>Cohort Size</span>
+                <button type="button" @click.stop="openParamHelp('cohort_size')" title="Explain Cohort Size" class="w-3.5 h-3.5 rounded-full bg-slate-200 dark:bg-slate-700 hover:bg-clinical-500 hover:text-white text-slate-500 dark:text-slate-400 inline-flex items-center justify-center text-[10px] font-bold font-mono transition ml-1 cursor-pointer">?</button>
+              </label>
+              <input x-model.number="designConfig.cohort_size" type="number" step="1" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-forge-500">
+            </div>
           </div>
         </template>
       </div>
@@ -797,11 +947,263 @@
   </div>
 </div>
 
+<!-- PARAMETER EXPLANATION & REGULATORY GUIDE MODAL -->
+<div x-show="showParamHelpModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" @click.self="showParamHelpModal=false" x-cloak>
+  <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-2xl max-h-[85vh] flex flex-col shadow-2xl overflow-hidden">
+    <!-- Modal Header -->
+    <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-800/50">
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 rounded-xl bg-clinical-100 dark:bg-clinical-900/40 text-clinical-600 dark:text-clinical-400 flex items-center justify-center font-bold text-sm font-mono">?</div>
+        <div>
+          <h3 class="text-base font-bold text-slate-900 dark:text-white" x-text="activeHelpParam ? activeHelpParam.name : 'Parameter Guide'"></h3>
+          <p class="text-xs text-slate-400">Clinical Biostatistics & Regulatory Trial Standard</p>
+        </div>
+      </div>
+      <button @click="showParamHelpModal=false" class="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <!-- Modal Body -->
+    <div class="p-6 overflow-y-auto space-y-4 text-sm" x-show="activeHelpParam">
+      <!-- Formula Banner -->
+      <template x-if="activeHelpParam && activeHelpParam.math">
+        <div class="bg-slate-100 dark:bg-slate-800/80 rounded-xl p-3 border border-slate-200 dark:border-slate-700 flex items-center justify-between">
+          <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Mathematical Notation:</span>
+          <div x-html="renderMathInline(activeHelpParam.math)" class="text-clinical-600 dark:text-clinical-400 font-mono font-bold"></div>
+        </div>
+      </template>
+
+      <!-- Plain English Summary -->
+      <div>
+        <h4 class="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-1">What is this?</h4>
+        <p class="text-slate-700 dark:text-slate-300 leading-relaxed text-xs" x-text="activeHelpParam ? activeHelpParam.summary : ''"></p>
+      </div>
+
+      <!-- In-Depth Clinical / Statistical Detail -->
+      <div class="bg-slate-50 dark:bg-slate-950/50 rounded-xl p-3.5 border border-slate-100 dark:border-slate-800">
+        <h4 class="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-1.5">Clinical Rationale & Impact on Trial Design</h4>
+        <div class="text-slate-600 dark:text-slate-300 text-xs whitespace-pre-line leading-relaxed" x-text="activeHelpParam ? activeHelpParam.detail : ''"></div>
+      </div>
+
+      <!-- Regulatory Guidance -->
+      <div class="flex items-start gap-2 text-xs bg-indigo-50 dark:bg-indigo-950/30 border border-indigo-100 dark:border-indigo-900/40 rounded-xl p-3 text-indigo-900 dark:text-indigo-200">
+        <svg class="w-4 h-4 text-indigo-600 dark:text-indigo-400 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        <div>
+          <span class="font-bold">Regulatory Reference:</span>
+          <p class="mt-0.5 text-[11px]" x-text="activeHelpParam ? activeHelpParam.guidance : ''"></p>
+        </div>
+      </div>
+
+      <!-- Example Values & Practical Recommendation -->
+      <div class="border-t border-slate-100 dark:border-slate-800 pt-3">
+        <span class="text-xs font-bold text-slate-700 dark:text-slate-300">Practical Example & Typical Values:</span>
+        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 font-mono bg-slate-100 dark:bg-slate-800 px-3 py-2 rounded-lg" x-text="activeHelpParam ? activeHelpParam.example : ''"></p>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
+const PARAM_HELP_DICTIONARY = {
+  protocol_id: {
+    name: "Protocol ID",
+    math: "\\text{Protocol ID}",
+    summary: "Unique alphanumeric protocol identifier assigned to the clinical study.",
+    detail: "Standard identifier used across all regulatory submission packages (IND/NDA/BLA), institutional review boards (IRBs), and CDISC SDTM domains (STUDYID and TSPARMCD='PROTOCOL').",
+    guidance: "ICH GCP E6 (R2) Section 6.1 · CDISC SDTM TS domain",
+    example: "e.g., ONCO-2026-001, PRT-CARDIO-301"
+  },
+  hypothesis_type: {
+    name: "Hypothesis Type",
+    math: "H_0 \\text{ vs. } H_1",
+    summary: "The formal statistical framework governing the primary efficacy inference.",
+    detail: "Defines the directional testing objective:\n• Superiority: Demonstrating the test drug is better than control/placebo (two-sided α = 0.05 or one-sided α = 0.025).\n• Non-Inferiority: Demonstrating the test drug is not clinically inferior to standard-of-care within a pre-specified margin δ.\n• Equivalence: Demonstrating the test drug is therapeutically equivalent within [-δ, +δ] (TOST / Bioequivalence).\n• Single-Arm / Benchmark: Demonstrating response exceeds an Objective Performance Goal (OPG) or historical control.",
+    guidance: "ICH E9 (Statistical Principles for Clinical Trials) · FDA Non-Inferiority Clinical Trials Guidance",
+    example: "Superiority is standard for new therapeutics; Non-Inferiority is common when comparing to established standard of care."
+  },
+  endpoint_type: {
+    name: "Primary Endpoint Type",
+    math: "Y \\in \\{\\mathbb{R}, \\{0,1\\}, T_{\\text{event}}\\}",
+    summary: "The mathematical nature and distribution of the primary trial outcome measure.",
+    detail: "Determines the biostatistical sample size formula and analysis model:\n• Continuous: Quantitative scales (blood pressure mmHg, HbA1c %, tumor reduction mm) via ANCOVA or MMRM.\n• Binary / Proportion: Success/failure rates (Objective Response Rate ORR, 30-day survival) via Farrington-Manning or Fleiss test.\n• Time-to-Event (Survival): Progression-Free Survival (PFS), Overall Survival (OS), or MACE via Schoenfeld log-rank test.\n• Diagnostic Accuracy: Sensitivity/Specificity vs gold standard via Buderer formula.\n• Cluster Randomized (CRT): Health systems or clinics randomized as units, adjusted for Intraclass Correlation (ICC).\n• Vaccine Efficacy: Event-driven risk reduction (VE = 1 - RR) via Poisson rates.\n• Dose Escalation (3+3): Early phase cohort rule determining Maximum Tolerated Dose (MTD).\n• Factorial 2x2: Evaluating combinations of Drug A and Drug B simultaneously.",
+    guidance: "ICH E9(R1) Estimands and Sensitivity Analysis · FDA Guidance on Multiple Endpoints",
+    example: "Select Survival for Oncology PFS/OS; Continuous for Chronic/Metabolic; Binary for Device TLF or Antibiotic cure."
+  },
+  alpha: {
+    name: "Alpha (Significance Level / Type I Error Rate)",
+    math: "\\alpha = P(\\text{Reject } H_0 \\mid H_0 \\text{ is True})",
+    summary: "The maximum acceptable probability of committing a false positive error (Type I error).",
+    detail: "The regulatory threshold for claiming statistical significance:\n• 0.05: Standard two-sided significance level for superiority trials (corresponds to one-sided 0.025 in each tail).\n• 0.025: Standard one-sided level for regulatory non-inferiority trials.\n• 0.01: Stringent threshold for confirmatory single-study registration or interim looks.",
+    guidance: "ICH E9 Section 5.1 · FDA Guidance on Demonstrating Substantial Evidence of Effectiveness",
+    example: "Default: 0.05 for 2-sided Superiority; 0.025 for 1-sided Non-Inferiority."
+  },
+  power: {
+    name: "Statistical Power (1 - Beta)",
+    math: "1 - \\beta = P(\\text{Reject } H_0 \\mid H_1 \\text{ is True})",
+    summary: "The probability of successfully detecting a true therapeutic effect of the targeted magnitude.",
+    detail: "Higher power reduces the risk of a false-negative trial (Type II error β):\n• 80% (β = 0.20): Standard minimum acceptable power for Phase 2 proof-of-concept.\n• 85%–90% (β = 0.10): Standard industry benchmark for pivotal Phase 3 confirmatory registration trials.\n• 95%: Used for critical pivotal trials with high financial stakes or narrow margins.",
+    guidance: "ICH E9 Section 3.5 (Sample Size)",
+    example: "Increasing power from 80% to 90% increases required sample size by ~34%."
+  },
+  allocation_ratio: {
+    name: "Allocation Ratio (Randomization Proportion)",
+    math: "r = \\frac{N_{\\text{treatment}}}{N_{\\text{control}}}",
+    summary: "The planned ratio of subjects assigned to the Experimental arm versus the Control arm.",
+    detail: "Governs randomization balance:\n• 1:1 (r = 1.0): Statistically optimal balance providing the highest statistical power per total enrolled patient.\n• 2:1 (r = 2.0): 2 patients receive active drug for every 1 control patient (67% active). Increases subject enrollment enthusiasm and expands safety database in oncology and rare diseases.\n• 3:1 (r = 3.0): 75% active treatment. Common in orphan indications with limited patient availability.",
+    guidance: "ICH E9 Section 2.3 (Randomisation) · CDISC SDTM TA domain",
+    example: "1:1 requires fewest patients. 2:1 requires ~12.5% more total patients but makes recruitment significantly easier."
+  },
+  dropout_rate: {
+    name: "Anticipated Dropout Rate (Attrition)",
+    math: "N_{\\text{enrolled}} = \\left\\lceil \\frac{N_{\\text{evaluable}}}{1 - \\text{Dropout}} \\right\\rceil",
+    summary: "The expected percentage of randomized subjects who discontinue or become unevaluable prior to primary endpoint.",
+    detail: "Accounts for lost-to-follow-up, consent withdrawals, and early non-compliance:\n• Short acute studies: typically 0%–5% dropout.\n• Chronic studies (6–12 months): typically 10%–15% dropout.\n• Long-term oncology / outcomes trials (3–5 years): 15%–20% dropout.\nThe engine automatically inflates the target enrollment so that the required evaluable sample size is maintained.",
+    guidance: "ICH E9 Section 3.5 · FDA Guidance on Missing Data in Clinical Trials",
+    example: "If 100 evaluable subjects are needed with 10% dropout, 112 subjects must be enrolled."
+  },
+  mean_control: {
+    name: "Mean Response (Control Arm)",
+    math: "\\mu_0",
+    summary: "Expected baseline or post-treatment average continuous outcome in the control group.",
+    detail: "Obtained from historical clinical trials, natural history data, or published medical literature for the comparator therapy.",
+    guidance: "ICH E9 Section 3.5",
+    example: "e.g., Blood pressure 140 mmHg, baseline HbA1c 8.2%, baseline Pain Score 6.5."
+  },
+  mean_treatment: {
+    name: "Mean Response (Treatment Arm)",
+    math: "\\mu_1",
+    summary: "Target or anticipated average continuous outcome in the investigational treatment group.",
+    detail: "Reflects the minimum clinically meaningful treatment effect size expected from preclinical, Phase 1, or Phase 2 data.",
+    guidance: "ICH E9 Section 3.5",
+    example: "e.g., Target blood pressure reduction to 128 mmHg (Δ = -12 mmHg)."
+  },
+  sd_pooled: {
+    name: "Pooled Standard Deviation (Sigma)",
+    math: "\\sigma = \\sqrt{\\frac{(n_1-1)s_1^2 + (n_2-1)s_2^2}{n_1+n_2-2}}",
+    summary: "The anticipated population variability and dispersion in the primary continuous outcome.",
+    detail: "Directly affects sample size quadratically (Sample size N is proportional to σ² / Δ²). Overestimating variability leads to oversized trials; underestimating leads to underpowered studies.",
+    guidance: "ICH E9 Section 3.5",
+    example: "Obtain σ from standard errors or standard deviations in published literature for the target endpoint."
+  },
+  delta_margin: {
+    name: "Delta / Non-Inferiority Margin",
+    math: "\\delta",
+    summary: "The largest clinically acceptable difference by which the test product may be inferior to the active comparator.",
+    detail: "Regulatory requirement for Non-Inferiority & Equivalence trials:\n• Must preserve a defined fraction (typically ≥ 50%) of the established effect of the active comparator over placebo (M1 margin).\n• Must ensure that any efficacy loss is clinically negligible (M2 margin).",
+    guidance: "FDA Guidance on Non-Inferiority Clinical Trials · EMA Guideline on the Choice of the Non-Inferiority Margin",
+    example: "e.g., δ = 0.08 (8% difference in binary cure rate) or δ = 2.0 mmHg for blood pressure."
+  },
+  prop_treatment: {
+    name: "Response Rate (Treatment Arm)",
+    math: "p_2",
+    summary: "Anticipated proportion of subjects achieving clinical response/cure in the investigational group.",
+    detail: "Expected binary success rate under the experimental therapy (e.g. 50% ORR).",
+    guidance: "ICH E9 Section 3.5",
+    example: "e.g., 0.50 (50% response in experimental arm)."
+  },
+  prop_control: {
+    name: "Response Rate (Control Arm)",
+    math: "p_1",
+    summary: "Expected proportion of subjects achieving clinical response/cure in the control group.",
+    detail: "Benchmark success rate in standard-of-care or placebo comparator (e.g. 30% ORR).",
+    guidance: "ICH E9 Section 3.5",
+    example: "e.g., 0.30 (30% response in control arm)."
+  },
+  hazard_ratio: {
+    name: "Hazard Ratio (HR)",
+    math: "\\text{HR} = \\frac{\\lambda_{\\text{treatment}}(t)}{\\lambda_{\\text{control}}(t)}",
+    summary: "The relative risk of experiencing the event (disease progression, death, MACE) in treatment versus control.",
+    detail: "Standard effect size for time-to-event survival models:\n• HR = 1.0: No treatment effect.\n• HR = 0.70: 30% reduction in instantaneous event risk under investigational therapy.\n• HR = 0.50: 50% reduction in event risk.\nRequired events are calculated via Schoenfeld formula: E = (r+1)²(Z_α + Z_β)² / (r ln(HR)²).",
+    guidance: "ICH E9 Section 5.2 · FDA Oncology Endpoints Guidance",
+    example: "e.g., HR = 0.70 in PFS or OS superiority trials."
+  },
+  event_rate_control: {
+    name: "Control Event Rate / Incidence",
+    math: "P(\\text{Event}) = 1 - e^{-\\lambda T}",
+    summary: "The expected cumulative proportion of subjects in the study population who will experience the event during follow-up.",
+    detail: "Converts the required number of statistical events E into the total required patient enrollment N: N = E / P(Event).",
+    guidance: "ICH E9 Section 3.5",
+    example: "e.g., 0.65 in solid tumor trials with 2-year follow-up; 0.12 in CVOT diabetes trials."
+  },
+  sensitivity: {
+    name: "Expected Sensitivity (True Positive Rate)",
+    math: "S_N = \\frac{TP}{TP + FN}",
+    summary: "The proportion of truly diseased individuals correctly identified by the diagnostic index assay.",
+    detail: "Primary performance parameter in CLSI EP12 In Vitro Diagnostic (IVD) validation investigations.",
+    guidance: "CLSI EP12-A2 · FDA Guidance on Diagnostic Device Validation",
+    example: "e.g., 0.92 (92% sensitivity against gold standard PCR)."
+  },
+  prevalence: {
+    name: "Disease Prevalence in Target Population",
+    math: "\\text{Prevalence} = \\frac{TP + FN}{N}",
+    summary: "The anticipated proportion of subjects in the tested clinical population who have the target medical condition.",
+    detail: "Governs total subject sample size needed to yield the required number of diseased specimens via Buderer formula.",
+    guidance: "CLSI EP12-A2",
+    example: "e.g., 0.18 (18% disease prevalence in intended use population)."
+  },
+  ci_half_width: {
+    name: "Confidence Interval Half-Width (Precision Margin W)",
+    math: "W = \\pm Z_{\\alpha/2} \\sqrt{\\frac{S_N(1-S_N)}{N_{\\text{diseased}}}}",
+    summary: "The desired precision margin (half-width) for the two-sided 95% Clopper-Pearson or Wald confidence interval.",
+    detail: "Narrower intervals require larger sample sizes. A half-width of 0.05 means the 95% CI will span [Sensitivity - 0.05, Sensitivity + 0.05].",
+    guidance: "CLSI EP12-A2 · FDA CDRH IVD Guidance",
+    example: "e.g., 0.04 (±4% precision for 95% CI)."
+  },
+  cluster_size: {
+    name: "Cluster Size (m)",
+    math: "m",
+    summary: "The average number of patients enrolled per cluster (clinic, hospital, or health center).",
+    detail: "Used in Cluster Randomized Trials (CRTs) to compute the Variance Inflation Factor (VIF): VIF = 1 + (m - 1)ρ.",
+    guidance: "CONSORT Statement for Cluster Randomised Trials",
+    example: "e.g., 25–30 patients per health center."
+  },
+  icc: {
+    name: "Intraclass Correlation Coefficient (ICC / Rho)",
+    math: "\\rho = \\frac{\\sigma_{\\text{between}}^2}{\\sigma_{\\text{between}}^2 + \\sigma_{\\text{within}}^2}",
+    summary: "The degree of outcome correlation and clustering among patients treated within the same clinic or facility.",
+    detail: "Accounts for shared clinical provider practices. Typical ICC values in primary care and hospital clusters range from 0.01 to 0.05.",
+    guidance: "CONSORT Cluster Trials Extension",
+    example: "e.g., 0.02 (2% clustering effect)."
+  },
+  vaccine_efficacy: {
+    name: "Target Vaccine Efficacy (VE)",
+    math: "\\text{VE} = 1 - \\text{RR} = 1 - \\frac{\\lambda_{\\text{vaccine}}}{\\lambda_{\\text{placebo}}}",
+    summary: "The target proportional reduction in pathogen disease incidence under the investigational vaccine.",
+    detail: "Standard preventive efficacy metric for Phase 3 vaccine trials evaluated via Poisson event surveillance.",
+    guidance: "FDA Guidance on Development and Licensure of Vaccines · WHO Guidelines",
+    example: "e.g., 0.75 (75% vaccine efficacy against confirmed symptomatic illness)."
+  },
+  null_ve: {
+    name: "Null Hypothesis Vaccine Efficacy (VE0)",
+    math: "\\text{VE}_0",
+    summary: "The regulatory lower-bound threshold efficacy that the trial must statistically exceed (H0: VE ≤ VE0).",
+    detail: "FDA/WHO guidance requires demonstrating the 95% confidence interval lower bound exceeds 30% or 50%.",
+    guidance: "FDA Vaccine Guidelines",
+    example: "e.g., 0.30 (30% null threshold) or 0.50 (50% null threshold)."
+  },
+  dose_levels: {
+    name: "Dose Escalation Levels",
+    math: "K \\text{ Cohorts}",
+    summary: "The number of planned dose tier cohorts in a Phase 1 First-in-Human dose escalation study.",
+    detail: "Cohorts follow a pre-specified dose escalation schema (e.g. Modified Fibonacci or Bayesian Optimal Interval BOIN).",
+    guidance: "FDA Guidance on Estimating Maximum Safe Starting Dose in Initial Clinical Trials",
+    example: "e.g., 5 dose cohorts (10mg, 25mg, 50mg, 100mg, 200mg)."
+  },
+  cohort_size: {
+    name: "Cohort Size",
+    math: "N_{\\text{cohort}} = 3",
+    summary: "The number of subjects evaluated simultaneously at each dose level in a classic 3+3 design.",
+    detail: "Evaluates Dose-Limiting Toxicities (DLTs) over a standard 28-day (Cycle 1) observation window.",
+    guidance: "NCI Phase 1 Guidelines",
+    example: "Default: 3 patients per cohort (expands to 6 if 1/3 experiences DLT)."
+  }
+};
+
 function clinForgeApp() {
   return {
     activeTab: 'design', isDarkMode: true, showSettingsModal: false,
     showDocModal: false, activeDocType: 'protocol', generatingDoc: false, docTitle: '', docContent: '', docProvider: '', docCopied: false,
+    showParamHelpModal: false, activeHelpParam: null,
     studyInfo: {}, studyStats: {}, uploadStatus: '', uploadMessage: '', loadPath: '',
     aiConfig: { provider: 'gemini', apiKey: '', model: 'gemini-2.0-flash' },
     studyCatalog: [], selectedDesignCategory: 'All', selectedDesign: null,
@@ -835,6 +1237,13 @@ function clinForgeApp() {
 
     getProviderLabel() { return {gemini:'Gemini AI',openai:'OpenAI',claude:'Claude',local:'Local LLM'}[this.aiConfig.provider]||'AI'; },
     saveAiSettings() { localStorage.setItem('clinforge-ai',JSON.stringify(this.aiConfig)); this.showSettingsModal=false; },
+
+    openParamHelp(key) {
+      if (PARAM_HELP_DICTIONARY[key]) {
+        this.activeHelpParam = PARAM_HELP_DICTIONARY[key];
+        this.showParamHelpModal = true;
+      }
+    },
 
     async fetchStudyCatalog() {
       try { const r=await fetch('/api/designs/catalog'); if(r.ok){const d=await r.json();this.studyCatalog=d.designs||[];} } catch(e){}
