@@ -1297,7 +1297,22 @@ function clinForgeApp() {
       this.selectedDesign = design;
       this.sampleSizeResult = null;
       this.tdmResult = null;
-      if (design.default_params) this.designConfig = { ...this.designConfig, ...design.default_params };
+      if (design.default_params) {
+        this.designConfig = { ...this.designConfig, ...design.default_params };
+        if (design.default_params.alpha !== undefined) {
+          this.designConfig.alpha = String(design.default_params.alpha);
+        }
+        if (design.default_params.power !== undefined) {
+          this.designConfig.power = Number(design.default_params.power).toFixed(2);
+        }
+        if (design.default_params.allocation_ratio !== undefined) {
+          this.designConfig.allocation_ratio = String(parseInt(design.default_params.allocation_ratio));
+        }
+        if (design.default_params.dropout_rate !== undefined) {
+          const d = Number(design.default_params.dropout_rate);
+          this.designConfig.dropout_rate = d === 0 ? "0.0" : d.toFixed(2);
+        }
+      }
       if (design.hypothesis_type) this.designConfig.hypothesis_type = design.hypothesis_type.toLowerCase().replace(/ /g, '_');
       if (design.endpoint_type) this.designConfig.endpoint_type = design.endpoint_type.toLowerCase();
       else if (design.primary_endpoint_type) this.designConfig.endpoint_type = design.primary_endpoint_type.toLowerCase();
